@@ -1,10 +1,15 @@
-classdef SimpleContactInhibitionCellCycle < AbstractCellCycleModel
+classdef DivisionContactInhibition < AbstractCellCycleModel
 	% A cell cycle with 2 phases, a growth phase and a pause phase
 	% During the pause phase the cell is a constant size (or target size)
 	% During the growing phase, the cell is increasing its volume (or target volume)
 
 	% After a fresh division, the cell stays a constant size, for a time specified by
 	% pausePhaseDuration, after which it starts growing
+
+	% Contact inhibition is implemented to stop cells dividing. When a cell
+	% reaches the end of its growth phase (where the target size is maximum and constant)
+	% the cell will only divide if the size is greater than gamma*Sgrown, i.e. the
+	% actual size relative to the target size is greater than the divisionTriggerFraction
 
 	properties
 
@@ -20,7 +25,7 @@ classdef SimpleContactInhibitionCellCycle < AbstractCellCycleModel
 		pausePhaseRNG = rand
 		growthPhaseRNG = rand
 
-		growthTriggerFraction
+		divisionTriggerFraction
 
 		dt
 
@@ -33,7 +38,7 @@ classdef SimpleContactInhibitionCellCycle < AbstractCellCycleModel
 
 	methods
 
-		function obj = SimpleContactInhibitionCellCycle(p, g, f, dt)
+		function obj = DivisionContactInhibition(p, g, f, dt)
 
 			% Need this annoying way of setting default values because
 			% of a matlab quirk
@@ -43,7 +48,7 @@ classdef SimpleContactInhibitionCellCycle < AbstractCellCycleModel
 			obj.SetPausePhaseDuration(p);
 			obj.SetGrowthPhaseDuration(g);
 
-			obj.growthTriggerFraction = f;
+			obj.divisionTriggerFraction = f;
 
 			obj.dt = dt;
 
@@ -66,12 +71,7 @@ classdef SimpleContactInhibitionCellCycle < AbstractCellCycleModel
 				obj.colour = obj.pauseColour;
 			else
 				c = obj.containingCell;
-				if c.GetCellArea() < obj.growthTriggerFraction * c.newCellTargetArea
-					% If it's too compressed, extend the pause phase
-					% Since this already assumes the cell is at the end of
-					% pause phase, this will occur when the cell is ready to
-					% start growing, except for being to compressed
-					obj.pausePhaseDuration = obj.pausePhaseDuration + obj.dt;
+				if c.GetCellArea() < obj.divisionTriggerFraction * c.grownCellTargetArea
 					obj.colour = obj.inhibitedColour;
 				else
 					obj.colour = obj.growthColour;
@@ -82,7 +82,7 @@ classdef SimpleContactInhibitionCellCycle < AbstractCellCycleModel
 
 		function newCCM = Duplicate(obj)
 
-			newCCM = SimpleContactInhibitionCellCycle(obj.meanPausePhaseDuration, obj.meanGrowthPhaseDuration, obj.growthTriggerFraction, obj.dt);
+			newCCM = DivisionContactInhibition(obj.meanPausePhaseDuration, obj.meanGrowthPhaseDuration, obj.divisionTriggerFraction, obj.dt);
 			newCCM.SetAge(0);
 			newCCM.pauseColour = obj.pauseColour;
 			newCCM.growthColour = obj.growthColour;
@@ -99,7 +99,8 @@ classdef SimpleContactInhibitionCellCycle < AbstractCellCycleModel
 		function ready = IsReadyToDivide(obj);
 
 			ready = false;
-			if obj.pausePhaseDuration + obj.growthPhaseDuration < obj.GetAge()
+			c = obj.containingCell;
+			if obj.pausePhaseDuration + obj.growthPhaseDuration < obj.GetAge() && c.GetCellArea() > obj.divisionTriggerFraction * c.grownCellTargetArea
 				ready = true;
 			end
 

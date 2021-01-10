@@ -48,7 +48,7 @@ classdef Spheroid < FreeCellSimulation
 				x = X(i);
 				y = Y(i);
 				
-				ccm = SimpleContactInhibitionCellCycle(t0, tg, f, obj.dt);
+				ccm = GrowthContactInhibition(t0, tg, f, obj.dt);
 				
 
 				c = MakeCellAtCentre(obj, N, x + 0.5 * mod(y,2), y * sqrt(3)/2, ccm);

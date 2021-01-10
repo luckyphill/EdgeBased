@@ -87,7 +87,7 @@ classdef VolfsonExperiment < FreeCellSimulation
 				obj.nodeList = [obj.nodeList, n1, n2];
 				obj.elementList = [obj.elementList, e];
 
-				ccm = SimpleContactInhibitionCellCycle(t0, tg, f, obj.dt);
+				ccm = DivisionContactInhibition(t0, tg, f, obj.dt);
 				ccm.pauseColour = ccm.colourSet.GetNumber('ECOLI');
 				ccm.growthColour = ccm.colourSet.GetNumber('ECOLI');
 				ccm.inhibitedColour = ccm.colourSet.GetNumber('ECOLISTOPPED');

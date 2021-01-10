@@ -116,11 +116,8 @@ classdef RingBuckling < RingSimulation
 			obj.AddElementsToList([elementBottom, elementRight, elementTop, elementLeft]);
 
 			% Cell cycle model
-			ccm = SimpleContactInhibitionCellCycle(t0, tg, f, obj.dt);
-			% ccm = LinearGrowthCellCycle(t0, tg, tm, f, obj.dt);
-			% ccm.stochasticGrowthStart = true;
-			% ccm.stochasticGrowthEnd = true;
-			% ccm.stochasticDivisionAge = true;
+			ccm = GrowthContactInhibition(t0, tg, f, obj.dt);
+
 
 			% Assemble the cell
 
@@ -144,11 +141,7 @@ classdef RingBuckling < RingSimulation
 
 				obj.AddElementsToList([elementBottom, elementRight, elementTop]);
 
-				ccm = SimpleContactInhibitionCellCycle(t0, tg, f, obj.dt);
-				% ccm = LinearGrowthCellCycle(t0, tg, tm, f, obj.dt);
-				% ccm.stochasticGrowthStart = true;
-				% ccm.stochasticGrowthEnd = true;
-				% ccm.stochasticDivisionAge = true;
+				ccm = GrowthContactInhibition(t0, tg, f, obj.dt);
 
 				obj.cellList(i) = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
 
@@ -168,11 +161,8 @@ classdef RingBuckling < RingSimulation
 
 			obj.AddElementsToList([elementBottom, elementTop]);
 
-			ccm = SimpleContactInhibitionCellCycle(t0, tg, f, obj.dt);
-			% ccm = LinearGrowthCellCycle(t0, tg, tm, f, obj.dt);
-			% ccm.stochasticGrowthStart = true;
-			% ccm.stochasticGrowthEnd = true;
-			% ccm.stochasticDivisionAge = true;
+			ccm = GrowthContactInhibition(t0, tg, f, obj.dt);
+
 
 			obj.cellList(n) = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
 
