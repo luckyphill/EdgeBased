@@ -71,7 +71,7 @@ classdef DivisionContactInhibition < AbstractCellCycleModel
 				obj.colour = obj.pauseColour;
 			else
 				c = obj.containingCell;
-				if c.GetCellArea() < obj.divisionTriggerFraction * c.grownCellTargetArea
+				if obj.age > obj.pausePhaseDuration + obj.growthPhaseDuration && c.GetCellArea() < obj.divisionTriggerFraction * c.grownCellTargetArea
 					obj.colour = obj.inhibitedColour;
 				else
 					obj.colour = obj.growthColour;

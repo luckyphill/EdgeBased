@@ -552,10 +552,12 @@ classdef Visualiser < matlab.mixin.SetGet
 			axis equal
 			hold on
 			set(gca,'Color','k');
+			set(h, 'InvertHardcopy', 'off')
+			set(h,'color','w');
 
 			i = timeStep;
 
-			lineWidth = 1;
+			lineWidth = 0.5;
 			% Initialise the array with anything
 			patchObjects(1) = patch([1,1],[2,2],obj.cs.GetRGB(6), 'LineWidth', lineWidth);
 

@@ -18,7 +18,7 @@ classdef VolfsonExperiment < FreeCellSimulation
 
 	methods
 
-		function obj = VolfsonExperiment(n, l, r, s, tg, w, seed)
+		function obj = VolfsonExperiment(n, l, r, s, tg, w, f, seed)
 
 			% n is the number of cells to seed the experiment with
 			% l is the length of the cell. This includes the radius around the
@@ -27,14 +27,13 @@ classdef VolfsonExperiment < FreeCellSimulation
 			% s is the force pushing cells apart to their preferred distance
 			% tg is the time to grow from new cell to full size
 			% w is the width of the channel - the centre line will be y=0, so ymax = +/- w/2
+			% f is the contact inhibition fraction that stops the cell cycle from progressing
 			% The channel is represented by two infinitely long horizontal boundaries
 			% set a width w apart
 
 			% Other parameters
 			% Growth start time
 			t0 = 0;
-			% Contact inhibition fraction
-			f = 0.9;
 
 			% The asymptote, separation, and limit distances for the interaction force
 			dAsym = 0;
@@ -49,7 +48,7 @@ classdef VolfsonExperiment < FreeCellSimulation
 			% Make a grid of starting points
 			% we make them in steps of 2l to prevent cells overlapping
 			% in the initialisation stage
-			x = -80:l:80;
+			x = -40:l:40;
 			y = -(w/2):l:(w/2);
 			% x = -5:5;
 			% y = 0.5:(w-0.5);
@@ -87,10 +86,14 @@ classdef VolfsonExperiment < FreeCellSimulation
 				obj.nodeList = [obj.nodeList, n1, n2];
 				obj.elementList = [obj.elementList, e];
 
-				ccm = DivisionContactInhibition(t0, tg, f, obj.dt);
+				ccm = GrowthContactInhibition(t0, tg, f, obj.dt);
 				ccm.pauseColour = ccm.colourSet.GetNumber('ECOLI');
 				ccm.growthColour = ccm.colourSet.GetNumber('ECOLI');
 				ccm.inhibitedColour = ccm.colourSet.GetNumber('ECOLISTOPPED');
+				% Set the age to a random value to avoid population level
+				% cell cycle synchronisation. This will make most cells shorter than
+				% their target length, so there will be an early stage of rapid growth
+				ccm.SetAge(round(unifrnd(0,tg-2),1));
 
 				c = RodCell(e,ccm,obj.GetNextCellId());
 				% When the cell areas are calculated, the length of the edge and

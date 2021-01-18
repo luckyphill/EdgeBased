@@ -4,7 +4,7 @@ How to use the edge-based approach MATLAB software tool
 
 This is to accompany the paper "A rigid body approach to modelling cell cell interactions in 2D" by Brown et al.
 
-If you have downloaded this from GitHub, then you should find a directory called "EdgeBased/". This will be the main working directory. All of the components needed to run the simulations presented in Brown et al. can be found in the subdirectory "src/". After successfully running simulations, the additional subdirectory "SimulationOutput/" will be found, and if the Visualiser has been used to output images, these will be found in "Images/".
+If you have downloaded this from GitHub, then you should find a directory called "EdgeBased/". This will be the main working directory. All of the components needed to run the simulations presented in Brown et al. can be found in the subdirectory "src/", and the files that were used to produce the analysis shown in the paper can be found in "analysis/". After successfully running simulations, the additional subdirectory "SimulationOutput/" will be found, and if the Visualiser has been used to output images, these will be found in "Images/".
 
 ********************************************************
 Preparation
