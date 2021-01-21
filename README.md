@@ -2,9 +2,9 @@
 How to use the edge-based approach MATLAB software tool
 ********************************************************
 
-This is to accompany the paper "A rigid body approach to modelling cell cell interactions in 2D" by Brown et al.
+This is to accompany the paper "A rigid body approach to modelling interactions in multicellular tissues" by Brown et al.
 
-If you have downloaded this from GitHub, then you should find a directory called "EdgeBased/". This will be the main working directory. All of the components needed to run the simulations presented in Brown et al. can be found in the subdirectory "src/", and the files that were used to produce the analysis shown in the paper can be found in "analysis/". After successfully running simulations, the additional subdirectory "SimulationOutput/" will be found, and if the Visualiser has been used to output images, these will be found in "Images/".
+If you have downloaded this from GitHub, then you should find a directory called "EdgeBased/". This will be the main working directory. All of the components needed to run the simulations presented in Brown et al. can be found in the subdirectory "src/", and the files that were used to produce the analysis shown in the paper can be found in "analysis/". After successfully running simulations, the additional subdirectory "SimulationOutput/" will be found, and if the Visualiser has been used to output images, these will be found in "Images/". If an analysis has been run, then any images will also be found in "Images/", and if so chosen the formatted data can be found int "AnalysisOutput/".
 
 ********************************************************
 Preparation
@@ -150,3 +150,36 @@ Run using:
 	% t0 (=10) is the non growing phase duration
 	% tg (=10) is the growth phase duration
 	% hence t0 + tg is the total cell cycle length
+
+********************************************************
+Running analyses
+********************************************************
+The folder "analysis/" contains objects that will process pre-generated simulation output data and produce plots associated with the analysis. To run an analysis, you must first run the required models to t=200. A "SingleAnalysis" will produce plots for a single simulation, while a "MultiAnalysis" will produce plots for data averaged over several instaces of the same simulation with different RNG seeds.
+
+For example, to run an analysis of the E. coli model first run
+
+	ve = VolfsonExperiment(40, 6, 5, 40, 10, 20, 0.9, 1);
+	ve.RunToTime(200);
+
+to generate the simulation data, then run
+
+	vsa = VolfsonSingleAnalysis(40, 6, 5, 40, 10, 20, 0.9, 1);
+	vsa.AssembleData;
+	vsa.PlotData;
+
+For a multi-analysis, multiple simulations need to have been run to completion first. The multi-analysis files provided are for specific parameter sets, namely
+
+	s = Spheroid(10, 10, 10, 5, seed);
+	ve = VolfsonExperiment(20, 6, 5, 40, 10, 30, 0.9, seed);
+
+where "seed" is replaced with a different RNG seed for each instance. To run the multi-analysis, you need to provide a vector of the RNG seeds used for the completed simulations. In Brown et al. the seeds are 1:20, hence to run the analysis run
+	
+	vma = VolfsonMultiAnalysis(1:20);
+	vma.LoadSimulationData;
+	vma.PlotData;
+
+The method "LoadSimulationData" is recommended for large data sets, as it stores the processed data for later retrieval. The method "AssembleData" only loads the data into memory and does not save it. If you have used "LoadSimulationData" previously for an analysis, then using it again will load the processed data from file. If you wish to ignore the stored processed data and explicitly regenerate it, run
+
+	vma.LoadSimulationData('flag');
+
+where 'flag' can be any valid MATLAB string or variable.
