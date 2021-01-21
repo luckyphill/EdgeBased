@@ -77,12 +77,9 @@ classdef SpheroidMultiAnalysis < Analysis
 
 						A(j) = polyarea(x,y);
 
+						cs=CoulourSet();
 
-
-						if colour == 1 || colour == 3
-							% The are limit cuts out some extreme outliers possibly
-							% due to a division event in the previous timestep that
-							% does not reflect the true area of the cell
+						if colour == cs.GetNumber('PAUSE') || colour == cs.GetNumber('STOPPED')
 							% Assemble areas of non-growing cells
 							pauseAreas(end+1) = A(j);
 							pauseRadii(end+1) = norm(mean(nodeCoords));
@@ -185,7 +182,7 @@ classdef SpheroidMultiAnalysis < Analysis
 			ax = gca;
 			ax.FontSize = aFontSize;
 			title('Cell count over time','Interpreter', 'latex','FontSize', tFontSize);
-			ylabel('N','Interpreter', 'latex', 'FontSize', lFontSize);xlabel('time','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylabel('N','Interpreter', 'latex', 'FontSize', lFontSize);xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
 			xlim([0 200]);
 			SavePlot(obj, h, sprintf('CellCount'));
 
@@ -200,9 +197,9 @@ classdef SpheroidMultiAnalysis < Analysis
 			ax = gca;
 			ax.FontSize = aFontSize;
 			title('90\% Radius over time','Interpreter', 'latex','FontSize', tFontSize);
-			ylabel('Radius','Interpreter', 'latex', 'FontSize', lFontSize);xlabel('time','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylabel('Radius','Interpreter', 'latex', 'FontSize', lFontSize);xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
 			xlim([0 200]);
-			SavePlot(obj, h, sprintf('Radius80'));
+			SavePlot(obj, h, sprintf('Radius90'));
 
 		end
 

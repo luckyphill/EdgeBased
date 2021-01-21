@@ -1,5 +1,8 @@
 classdef ColourSet < matlab.mixin.SetGet
 	% The colours for rendering cells
+	% The order of the colours here must not be changed otherwise the colours will
+	% be set incorrectly. If additional colours are needed they mut be appended to the end
+	% and numbers incremented appropriately
 
 	properties
 

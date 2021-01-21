@@ -178,7 +178,6 @@ classdef RingBuckling < RingSimulation
 			%---------------------------------------------------
 			% Add space partition
 			%---------------------------------------------------
-			% In this simulation we are fixing the size of the boxes
 
 			obj.boxes = SpacePartition(0.5, 0.5, obj);
 
@@ -191,6 +190,7 @@ classdef RingBuckling < RingSimulation
 			obj.AddSimulationData(SpatialState());
 			pathName = sprintf('RingBuckling/n%gt0%gtg%gs%ga%gf%gda%gds%gdl%galpha%gbeta%gt%g_seed%g/',n,t0,tg,s,a,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, seed);
 			obj.AddDataWriter(WriteSpatialState(20,pathName));
+			obj.AddDataWriter(WriteCircularity(20,pathName));
 			
 
 			%---------------------------------------------------

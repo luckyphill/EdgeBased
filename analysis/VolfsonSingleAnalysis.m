@@ -54,42 +54,30 @@ classdef VolfsonSingleAnalysis < Analysis
 
 		function AssembleData(obj)
 
-			obj.result = Visualiser(sprintf('%s/n%gl%gr%gs%gtg%gw%gf%gt00da0ds1dl1a0_seed%g',obj.simulationDriverName,obj.n,obj.l,obj.r,obj.s,obj.tg,obj.w,obj.f,obj.seed));
+			v = Visualiser(sprintf('%s/n%gl%gr%gs%gtg%gw%gf%gt00da0ds1dl1a0_seed%g',obj.simulationDriverName,obj.n,obj.l,obj.r,obj.s,obj.tg,obj.w,obj.f,obj.seed));
 
-
-		end
-
-		function PlotData(obj, varargin)
-
-			h = figure;
-
-			angles = 0;
 
 			A = [];
 			Q = [];
 			L = [];
+			N = [];
 			lengths = [];
 
 			xlim([0 1.6]);
 			ylim([0  0.5]);
-			[I,~] = size(obj.result.cells);
-			startI = 1;
-			if ~isempty(varargin)
-				startI = varargin{1};
-			end
+			[I,~] = size(v.cells);
 
-			% i = 1900;
-			for i = startI:I
+			for i = 1:I
 				% i is the time steps
-				[~,J] = size(obj.result.cells);
+				[~,J] = size(v.cells);
 				j = 1;
 				angles = [];
-				while j <= J && ~isempty(obj.result.cells{i,j})
+				while j <= J && ~isempty(v.cells{i,j})
 
-					c = obj.result.cells{i,j};
+					c = v.cells{i,j};
 					ids = c(1:end-1);
 					colour = c(end);
-					nodeCoords = squeeze(obj.result.nodes(ids,i,:));
+					nodeCoords = squeeze(v.nodes(ids,i,:));
 
 					x = nodeCoords(:,1);
 					y = nodeCoords(:,2);
@@ -107,35 +95,64 @@ classdef VolfsonSingleAnalysis < Analysis
 				Q(end + 1) = sqrt(  mean(cos( 2.* angles))^2 + mean(sin( 2.* angles))^2   );
 				A(end + 1) = mean(abs(angles));
 				L(end + 1) = mean(lengths);
+				N(end + 1) = j-1;
 
 
 			end
 
-			plot(obj.result.timeSteps,Q, 'LineWidth', 4);
+			t = v.timeSteps;
+			obj.result = {Q, A, L, N, t};
+
+		end
+
+		function PlotData(obj)
+
+			
+
+			l = 1; % The extra amount added to the length of the edge to bring it up to the length of the cell
+
+			Q = obj.result{1};
+			A = obj.result{2};
+			L = obj.result{3} + l;
+			N = obj.result{4};
+			t = obj.result{5};
+
+			
+			h = figure;
+			plot(t,Q, 'LineWidth', 4);
 			ax = gca;
 			ax.FontSize = 16;
 			% title('Disorder factor Q over time','Interpreter', 'latex','FontSize', 22);
-			ylabel('Q','Interpreter', 'latex', 'FontSize', 40);xlabel('time','Interpreter', 'latex', 'FontSize', 40);
-			ylim([0 1.1]);; xlim([0 180]);
+			ylabel('Q','Interpreter', 'latex', 'FontSize', 40);xlabel('Time (min)','Interpreter', 'latex', 'FontSize', 40);
+			ylim([0 1.1]);; xlim([0 max(t)]);
 			SavePlot(obj, h, sprintf('QFactor'));
 			
 			h = figure;
-			plot(obj.result.timeSteps,A, 'LineWidth', 4);
+			plot(t,A, 'LineWidth', 4);
 			ax = gca;
 			ax.FontSize = 16;
 			% title('Average angle over time','Interpreter', 'latex','FontSize', 22);
-			ylabel('Avg. angle','Interpreter', 'latex', 'FontSize', 40);xlabel('time','Interpreter', 'latex', 'FontSize', 40);
-			ylim([0 1.7]); xlim([0 180]);
+			ylabel('Avg. angle','Interpreter', 'latex', 'FontSize', 40);xlabel('Time (min)','Interpreter', 'latex', 'FontSize', 40);
+			ylim([0 1.7]); xlim([0 max(t)]);
 			SavePlot(obj, h, sprintf('AvgAngle'));
 
 			h = figure;
+			plot(t,N, 'LineWidth', 4);
+			ax = gca;
+			ax.FontSize = 16;
+			% title('Average angle over time','Interpreter', 'latex','FontSize', 22);
+			ylabel('Cell Count','Interpreter', 'latex', 'FontSize', 40);xlabel('Time (min)','Interpreter', 'latex', 'FontSize', 40);
+			ylim([0 1.05*max(N)]); xlim([0 max(t)]);
+			SavePlot(obj, h, sprintf('CellCount'));
+
+			h = figure;
 			l=1; % The component of the cell length made up of the preferred separation
-			plot(obj.result.timeSteps,L+l, 'LineWidth', 4);
+			plot(t,L, 'LineWidth', 4);
 			ax = gca;
 			ax.FontSize = 16;
 			% title('Average length over time','Interpreter', 'latex','FontSize', 22);
-			ylabel('Avg. length','Interpreter', 'latex', 'FontSize', 40);xlabel('time','Interpreter', 'latex', 'FontSize', 40);
-			ylim([0.4*obj.l 1.1*obj.l]); xlim([0 180]);
+			ylabel('Avg. length','Interpreter', 'latex', 'FontSize', 40);xlabel('Time (min)','Interpreter', 'latex', 'FontSize', 40);
+			ylim([2 5]); xlim([0 max(t)]);
 			SavePlot(obj, h, sprintf('AvgLength'));
 
 			tFontSize = 40;
@@ -154,29 +171,51 @@ classdef VolfsonSingleAnalysis < Analysis
 			h = figure;
 			set(h, 'InvertHardcopy', 'off');
 			set(h,'color','w');
-			h0 = subplot(4,1,1);xlim([xmin,xmax]);ylim([ymin,ymax]);ylabel(['t= ', num2str(0)],'Interpreter', 'latex', 'FontSize', lFontSize);set(gca,'Color','k');
+			h0 = subplot(4,1,1);xlim([xmin,xmax]);ylim([ymin,ymax]);ylabel(['t= ', num2str(0), ' min'],'Interpreter', 'latex', 'FontSize', lFontSize);set(gca,'Color','k');
 			h1 = subplot(4,1,2);xlim([xmin,xmax]);ylim([ymin,ymax]);ylabel(['t= ', num2str(idx1/10)],'Interpreter', 'latex', 'FontSize', lFontSize);set(gca,'Color','k');
 			h2 = subplot(4,1,3);xlim([xmin,xmax]);ylim([ymin,ymax]);ylabel(['t= ', num2str(idx2/10)],'Interpreter', 'latex', 'FontSize', lFontSize);set(gca,'Color','k');
-			h3 = subplot(4,1,4);xlim([xmin,xmax]);ylim([ymin,ymax]);ylabel(['t= ', num2str(idx3/10)],'Interpreter', 'latex', 'FontSize', lFontSize);set(gca,'Color','k');
+			h3 = subplot(4,1,4);xlim([xmin,xmax]);ylim([ymin,ymax]);ylabel(['t= ', num2str(idx3/10)],'Interpreter', 'latex', 'FontSize', lFontSize);set(gca,'Color','k');xlabel('Position ($\mu$m)','Interpreter', 'latex', 'FontSize', lFontSize);
 			
+
+
+			v = Visualiser(sprintf('%s/n%gl%gr%gs%gtg%gw%gf%gt00da0ds1dl1a0_seed%g',obj.simulationDriverName,obj.n,obj.l,obj.r,obj.s,obj.tg,obj.w,obj.f,obj.seed));
 
 			r = 0.4; % The radius of the rod end caps
-			obj.result.PlotRodTimeStep(r, idx0);
+			v.PlotRodTimeStep(r, idx0);
 			copyobj(allchild(gca),h0);
 
-			obj.result.PlotRodTimeStep(r, idx1);
+			v.PlotRodTimeStep(r, idx1);
 			copyobj(allchild(gca),h1);
 			
-			obj.result.PlotRodTimeStep(r, idx2);
+			v.PlotRodTimeStep(r, idx2);
 			copyobj(allchild(gca),h2);
 			
-			obj.result.PlotRodTimeStep(r, idx3);
+			v.PlotRodTimeStep(r, idx3);
 			copyobj(allchild(gca),h3);
 
-			
-			
+			set(h,'Units','Inches');
+			h.Position = [6.1 4.0 7.8 7.1];
 
-			SavePlot(obj, figure(4), sprintf('TimeSnapShots'));
+			SavePlot(obj, h, sprintf('TimeSnapShots'));
+
+
+			r = 0.4; % The radius of the rod end caps
+			v.PlotRodAngles(r, idx0);
+			copyobj(allchild(gca),h0);
+
+			v.PlotRodAngles(r, idx1);
+			copyobj(allchild(gca),h1);
+			
+			v.PlotRodAngles(r, idx2);
+			copyobj(allchild(gca),h2);
+			
+			v.PlotRodAngles(r, idx3);
+			copyobj(allchild(gca),h3);
+
+			set(h,'Units','Inches');
+			h.Position = [6.1 4.0 7.8 7.1];
+
+			SavePlot(obj, h, sprintf('AngleSnapShots'));
 
 
 		end

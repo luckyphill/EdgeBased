@@ -81,7 +81,7 @@ classdef VolfsonMultiAnalysis < Analysis
 
 					Q(end + 1) = sqrt(  mean(cos( 2.* angles))^2 + mean(sin( 2.* angles))^2   );
 					L(end + 1) = mean(lengths);
-					N(end + 1) = J;
+					N(end + 1) = j-1;
 
 				end
 
@@ -121,7 +121,7 @@ classdef VolfsonMultiAnalysis < Analysis
 			ax = gca;
 			ax.FontSize = 16;
 			% title('Disorder factor Q over time','Interpreter', 'latex','FontSize', 22);
-			ylabel('Q','Interpreter', 'latex', 'FontSize', 40);xlabel('time','Interpreter', 'latex', 'FontSize', 40);
+			ylabel('Q','Interpreter', 'latex', 'FontSize', 40);xlabel('Time (min)','Interpreter', 'latex', 'FontSize', 40);
 			ylim([0 0.7]);; xlim([0 200]);
 			SavePlot(obj, h, sprintf('QFactor'));
 
@@ -143,7 +143,7 @@ classdef VolfsonMultiAnalysis < Analysis
 			ax = gca;
 			ax.FontSize = 16;
 			% title('Average length over time','Interpreter', 'latex','FontSize', 22);
-			ylabel('Avg. length','Interpreter', 'latex', 'FontSize', 40);xlabel('time','Interpreter', 'latex', 'FontSize', 40);
+			ylabel('Avg. length','Interpreter', 'latex', 'FontSize', 40);xlabel('Time (min)','Interpreter', 'latex', 'FontSize', 40);
 			ylim([2 5]); xlim([0 200]);
 			SavePlot(obj, h, sprintf('AvgLength'));
 
@@ -161,7 +161,7 @@ classdef VolfsonMultiAnalysis < Analysis
 			ax = gca;
 			ax.FontSize = 16;
 			% title('Disorder factor N over time','Interpreter', 'latex','FontSize', 22);
-			ylabel('N','Interpreter', 'latex', 'FontSize', 40);xlabel('time','Interpreter', 'latex', 'FontSize', 40);
+			ylabel('N','Interpreter', 'latex', 'FontSize', 40);xlabel('Time (min)','Interpreter', 'latex', 'FontSize', 40);
 			xlim([0 200]); %ylim([0 0.7]);
 			SavePlot(obj, h, sprintf('N'));
 

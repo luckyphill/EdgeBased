@@ -335,12 +335,27 @@ classdef Visualiser < matlab.mixin.SetGet
 
 		end
 
-		function PlotTimeStep(obj, timeStep)
+		function PlotTimeStep(obj, timeStep, varargin)
 
 			% Plots a single given timestep
 			% the number timeStep must be an integer matching the row number of the
 			% saved data. Usually this will be 10xt but not always
 
+			% varargin has inputs
+			% 1: plot axis range in the form [xmin,xmax,ymin,ymax]
+			% 2: plot title. can include latex
+
+			% if you want to ignore a particular input, use []
+
+			xyrange = [];
+			plotTitle = '';
+
+			if ~isempty(varargin)
+				xyrange = varargin{1};
+				if length(varargin)>1
+					plotTitle = varargin{2};
+				end
+			end
 
 			h = figure();
 			axis equal
@@ -371,11 +386,20 @@ classdef Visualiser < matlab.mixin.SetGet
 				j = j + 1;
 
 			end
+
+			if ~isempty(xyrange)
+				xlim(xyrange(1:2));
+				ylim(xyrange(3:4));
+			end
 			
 			% j will always end up being 1 more than the total number of non empty cells
 			axis off
 			drawnow
-			title(sprintf('t = %g',obj.timeSteps(i)),'Interpreter', 'latex', 'FontSize', 34);
+			if ~isempty(plotTitle)
+				title(plotTitle,'Interpreter', 'latex', 'FontSize', 34);
+			else
+				title(sprintf('t = %g',obj.timeSteps(i)),'Interpreter', 'latex', 'FontSize', 34);
+			end
 
 			set(h,'Units','Inches');
 			pos = get(h,'Position');
@@ -592,6 +616,65 @@ classdef Visualiser < matlab.mixin.SetGet
 			
 
 			fileName = sprintf('ImageAtTime_%g',obj.timeSteps(timeStep));
+			fileName = strrep(fileName,'.','_'); % If any time has decimals, change the point to underscore
+			fileName = sprintf('%s%s', obj.pathToOutput, fileName);
+			print(fileName,'-dpdf')
+
+		end
+
+		function PlotRodAngles(obj, r, timeStep)
+
+			% Plots a single given timestep
+
+			h = figure();
+			axis equal
+			hold on
+			set(gca,'Color','k');
+			set(h, 'InvertHardcopy', 'off')
+			set(h,'color','w');
+
+			i = timeStep;
+
+			lineWidth = 0.5;
+			% Initialise the array with anything
+			patchObjects(1) = patch([1,1],[2,2],obj.cs.GetRGB(6), 'LineWidth', lineWidth);
+
+
+			[~,J] = size(obj.cells);
+			j = 1;
+			while j <= J && ~isempty(obj.cells{i,j})
+
+				c = obj.cells{i,j};
+				ids = c(1:end-1);
+				colour = c(end);
+				nodeCoords = squeeze(obj.nodes(ids,i,:));
+
+				a = nodeCoords(1,:);
+				b = nodeCoords(2,:);
+
+				x = nodeCoords(:,1);
+				y = nodeCoords(:,2);
+
+				angColour = 2 * abs( atan( (x(1)-x(2)) / (y(1)-y(2))) ) / pi;
+
+				[pillX,pillY] = obj.DrawPill(a,b,r);
+				patchObjects(j) = patch(pillX,pillY,angColour, 'LineWidth', lineWidth);
+
+				j = j + 1;
+
+			end
+				% j will always end up being 1 more than the total number of non empty cells
+			% axis off
+			drawnow
+			title(sprintf('t = %g',obj.timeSteps(i)),'Interpreter', 'latex');
+
+
+			set(h,'Units','Inches');
+			pos = get(h,'Position');
+			set(h,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)]);
+			
+
+			fileName = sprintf('AnglesAtTime_%g',obj.timeSteps(timeStep));
 			fileName = strrep(fileName,'.','_'); % If any time has decimals, change the point to underscore
 			fileName = sprintf('%s%s', obj.pathToOutput, fileName);
 			print(fileName,'-dpdf')
