@@ -131,7 +131,6 @@ classdef VolfsonSingleAnalysis < Analysis
 			plot(t,A, 'LineWidth', 4);
 			ax = gca;
 			ax.FontSize = 16;
-			% title('Average angle over time','Interpreter', 'latex','FontSize', 22);
 			ylabel('Avg. angle','Interpreter', 'latex', 'FontSize', 40);xlabel('Time (min)','Interpreter', 'latex', 'FontSize', 40);
 			ylim([0 1.7]); xlim([0 max(t)]);
 			SavePlot(obj, h, sprintf('AvgAngle'));
@@ -140,7 +139,6 @@ classdef VolfsonSingleAnalysis < Analysis
 			plot(t,N, 'LineWidth', 4);
 			ax = gca;
 			ax.FontSize = 16;
-			% title('Average angle over time','Interpreter', 'latex','FontSize', 22);
 			ylabel('Cell Count','Interpreter', 'latex', 'FontSize', 40);xlabel('Time (min)','Interpreter', 'latex', 'FontSize', 40);
 			ylim([0 1.05*max(N)]); xlim([0 max(t)]);
 			SavePlot(obj, h, sprintf('CellCount'));
@@ -150,7 +148,6 @@ classdef VolfsonSingleAnalysis < Analysis
 			plot(t,L, 'LineWidth', 4);
 			ax = gca;
 			ax.FontSize = 16;
-			% title('Average length over time','Interpreter', 'latex','FontSize', 22);
 			ylabel('Avg. length','Interpreter', 'latex', 'FontSize', 40);xlabel('Time (min)','Interpreter', 'latex', 'FontSize', 40);
 			ylim([2 5]); xlim([0 max(t)]);
 			SavePlot(obj, h, sprintf('AvgLength'));

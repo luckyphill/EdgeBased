@@ -241,14 +241,17 @@ classdef Visualiser < matlab.mixin.SetGet
 
 		function ProduceMovie(obj, varargin)
 
-			% varargin is used to start the movie from a different point
-			% the number must be an integer matching the row number of the
-			% saved data. Usually this will be 10xt but not always
-			tIdxStart = 1;
-			tIdxEnd = length(obj.timeSteps);
+			% varargin 
+			% Arg 1: [indexStart, indexEnd] - a vector of the start and ending indices
+			% Arg 2: plot axis range in the form [xmin,xmax,ymin,ymax]
+			
+			xyrange = [];
+			indices = [];
 			if ~isempty(varargin)
-				tIdxStart = varargin{1};
-				tIdxEnd = varargin{2};
+				indices = varargin{1};
+				if length(varargin) > 1
+					xyrange = varargin{2};
+				end
 			end
 
 
@@ -259,14 +262,21 @@ classdef Visualiser < matlab.mixin.SetGet
 			axis equal
 			axis off
 			hold on
-			xl = 0;
-			xu = 0;
-			yl = 0;
-			yu = 0;
 
 			F = getframe(h);
-			xlim([-14.2091 15.5772])
-			ylim([-11.1677 12.3250])
+			
+			if ~isempty(xyrange)
+				xlim(xyrange(1:2));
+				ylim(xyrange(3:4));
+			end
+
+			if ~isempty(indices)
+				tIdxStart = indices(1);
+				tIdxEnd = indices(2);
+			else
+				tIdxStart = 1;
+				tIdxEnd = length(obj.timeSteps);
+			end
 
 			% Initialise the array with anything
 			fillObjects(1) = fill([1,1],[2,2],.5);
@@ -313,10 +323,15 @@ classdef Visualiser < matlab.mixin.SetGet
 
 			fileName = [obj.pathToOutput,'animation'];
 
-			if ~isempty(varargin)
+			if ~isempty(indices)
 				ts = obj.timeSteps(tIdxStart);
+				if tIdxStart == 1
+					ts = 0; % A little hack to make the numbers look nice, technically its lying
+				end
 				te = obj.timeSteps(tIdxEnd);
 				fileName = sprintf('%s_%gto%g',fileName, ts, te );
+			else
+				fileName = sprintf('%s_Full',fileName);
 			end
 
 			writerObj = VideoWriter(fileName,'MPEG-4');
@@ -474,34 +489,49 @@ classdef Visualiser < matlab.mixin.SetGet
 
 		end
 
-		function ProduceRodMovie(obj, varargin)
+		function ProduceRodMovie(obj, r, varargin)
 
-			tIdxStart = 1;
-			tIdxEnd = length(obj.timeSteps);
+
+			% varargin 
+			% Arg 1: [indexStart, indexEnd] - a vector of the start and ending indices
+			% Arg 2: plot axis range in the form [xmin,xmax,ymin,ymax]
+
+			xyrange = [];
+			indices = [];
 			if ~isempty(varargin)
-				tIdxStart = varargin{1};
-				tIdxEnd = varargin{2};
+				indices = varargin{1};
+				if length(varargin) > 1
+					xyrange = varargin{2};
+				end
 			end
 
 			% Currently same as run visualiser, but saves the movie
 
 			h = figure();
 			axis equal
-			axis off
+			% axis off
 			hold on
+			set(h, 'InvertHardcopy', 'off')
+			set(h,'color','w');
+			set(gca,'Color','k');
 
-			r = 0.08;
+			if ~isempty(xyrange)
+				xlim(xyrange(1:2));
+				ylim(xyrange(3:4));
+			end
 
-			xl = 0;
-			xu = 0;
-			yl = 0;
-			yu = 0;
+			if ~isempty(indices)
+				tIdxStart = indices(1);
+				tIdxEnd = indices(2);
+			else
+				tIdxStart = 1;
+				tIdxEnd = length(obj.timeSteps);
+			end
 
-			F = getframe(h);
+			F = getframe(gca); % Initialise the array
 
 			% Initialise the array with anything
-			% Initialise the array with anything
-			patchObjects(1) = patch([1,1],[2,2],obj.cs.GetRGB(6), 'LineWidth', 2);
+			patchObjects(1) = patch([1,1],[2,2],obj.cs.GetRGB(6), 'LineWidth', 0.5);
 
 			for i = tIdxStart:tIdxEnd
 				% i is the time steps
@@ -519,7 +549,7 @@ classdef Visualiser < matlab.mixin.SetGet
 
 					if j > length(patchObjects)
 						[pillX,pillY] = obj.DrawPill(a,b,r);
-						patchObjects(j) = patch(pillX,pillY,obj.cs.GetRGB(colour), 'LineWidth', 2);
+						patchObjects(j) = patch(pillX,pillY,obj.cs.GetRGB(colour), 'LineWidth', 0.5);
 					else
 						[pillX,pillY] = obj.DrawPill(a,b,r);
 						patchObjects(j).XData = pillX;
@@ -540,16 +570,21 @@ classdef Visualiser < matlab.mixin.SetGet
 				drawnow
 
 				title(sprintf('t = %g',obj.timeSteps(i)),'Interpreter', 'latex');
-				F(end+1) = getframe(h);
+				F(end+1) = getframe(gca);
 
 			end
 
 			fileName = [obj.pathToOutput,'animation'];
 
-			if ~isempty(varargin)
+			if ~isempty(indices)
 				ts = obj.timeSteps(tIdxStart);
+				if tIdxStart == 1
+					ts = 0; % A little hack to make the numbers look nice, technically its lying
+				end
 				te = obj.timeSteps(tIdxEnd);
 				fileName = sprintf('%s_%gto%g',fileName, ts, te );
+			else
+				fileName = sprintf('%s_Full',fileName);
 			end
 
 			writerObj = VideoWriter(fileName,'MPEG-4');
@@ -575,9 +610,9 @@ classdef Visualiser < matlab.mixin.SetGet
 			h = figure();
 			axis equal
 			hold on
-			set(gca,'Color','k');
 			set(h, 'InvertHardcopy', 'off')
 			set(h,'color','w');
+			set(gca,'Color','k');
 
 			i = timeStep;
 

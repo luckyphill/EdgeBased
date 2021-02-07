@@ -143,7 +143,7 @@ classdef VolfsonMultiAnalysis < Analysis
 			ax = gca;
 			ax.FontSize = 16;
 			% title('Average length over time','Interpreter', 'latex','FontSize', 22);
-			ylabel('Avg. length','Interpreter', 'latex', 'FontSize', 40);xlabel('Time (min)','Interpreter', 'latex', 'FontSize', 40);
+			ylabel('Avg. length ($\mu$m)','Interpreter', 'latex', 'FontSize', 40);xlabel('Time (min)','Interpreter', 'latex', 'FontSize', 40);
 			ylim([2 5]); xlim([0 200]);
 			SavePlot(obj, h, sprintf('AvgLength'));
 

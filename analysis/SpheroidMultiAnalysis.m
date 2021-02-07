@@ -150,22 +150,23 @@ classdef SpheroidMultiAnalysis < Analysis
 
 			end
 
+			CD = 15;
 			h = figure;
 			hold on;
 			for i=1:5
-				plot(bins(2:end), nanmean(M(:,:,i)), 'LineWidth', 4);
+				plot(CD*bins(2:end), nanmean(M(:,:,i)), 'LineWidth', 4);
 			end
 
 
 			tFontSize = 40;
-			lFontSize = 40;
+			lFontSize = 30;
 			aFontSize = 24;
 			% legend(leg)
 			ax = gca;
 			ax.FontSize = aFontSize;
 			title('Avg cell area vs radius','Interpreter', 'latex','FontSize', tFontSize);
-			ylabel('Avg area','Interpreter', 'latex', 'FontSize', lFontSize);xlabel('Radius','Interpreter', 'latex', 'FontSize', lFontSize);
-			xlim([0 14]);
+			ylabel('Avg area / $$S_{\mathrm{grown}}$$','Interpreter', 'latex', 'FontSize', lFontSize);xlabel('Radius ($\mu$m)','Interpreter', 'latex', 'FontSize', lFontSize);
+			xlim([0 14*CD]);
 			ylim([0.425 0.48]);
 			
 			SavePlot(obj, h, sprintf('AreaRadiusDistribution'));
@@ -191,13 +192,13 @@ classdef SpheroidMultiAnalysis < Analysis
 			minR90 = min(R90);
 			avgR90 = mean(R90);
 			h = figure;
-			plot(0.1:0.1:200,avgR90, 'LineWidth', 4);
+			plot(0.1:0.1:200,CD*avgR90, 'LineWidth', 4);
 			hold on
-			fill([0.1:0.1:200,fliplr(0.1:0.1:200)], [minR90,fliplr(maxR90)], [0, .45, 0.74], 'FaceAlpha', 0.25, 'EdgeAlpha',0);
+			fill([0.1:0.1:200,fliplr(0.1:0.1:200)], [CD*minR90,CD*fliplr(maxR90)], [0, .45, 0.74], 'FaceAlpha', 0.25, 'EdgeAlpha',0);
 			ax = gca;
 			ax.FontSize = aFontSize;
 			title('90\% Radius over time','Interpreter', 'latex','FontSize', tFontSize);
-			ylabel('Radius','Interpreter', 'latex', 'FontSize', lFontSize);xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylabel('Radius ($\mu$m)','Interpreter', 'latex', 'FontSize', lFontSize);xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
 			xlim([0 200]);
 			SavePlot(obj, h, sprintf('Radius90'));
 
