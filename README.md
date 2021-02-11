@@ -2,7 +2,7 @@
 How to use the edge-based approach MATLAB software tool
 ********************************************************
 
-This is to accompany the paper "A rigid body framework for multi-cellular modelling" by Brown et al.
+This is to accompany the paper "A rigid body framework for multi-cellular modelling" by Brown et al. which can be found at https://doi.org/10.1101/2021.02.10.430170
 
 If you have downloaded this from GitHub, then you should find a directory called "EdgeBased/". This will be the main working directory. All of the components needed to run the simulations presented in Brown et al. can be found in the subdirectory "src/", and the files that were used to produce the analysis shown in the paper can be found in "analysis/". After successfully running simulations, the additional subdirectory "SimulationOutput/" will be found, and if the Visualiser has been used to output images, these will be found in "Images/". If an analysis has been run, then any images will also be found in "Images/", and if so chosen the formatted data can be found int "AnalysisOutput/".
 
@@ -134,8 +134,8 @@ Volfson Experiment model
 Run using:
 
 	ve = VolfsonExperiment(n, l, r, s, tg, w, seed);
-	% n (=50) is the number of cells to seed the experiment with
-	% l (=5) is the length of the cell. This includes the radius around the end of the cell
+	% n (=20) is the number of cells to seed the experiment with
+	% l (=6) is the length of the cell. This includes the radius around the end of the cell
 	% r (=5) is the rod growing force
 	% s (=40) is the force pushing cells apart to their preferred distance
 	% tg (=10) is the time to grow from new cell to full size
