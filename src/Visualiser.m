@@ -176,6 +176,8 @@ classdef Visualiser < matlab.mixin.SetGet
 
 		end
 
+
+		% Really need to abstract this so the code isn't copied over and over
 		function VisualiseCells(obj, varargin)
 
 			% This will take the formatted data and produce an animated
@@ -603,6 +605,128 @@ classdef Visualiser < matlab.mixin.SetGet
 
 		end
 
+		function ProduceRodAngleMovie(obj, r, varargin)
+
+
+			% varargin 
+			% Arg 1: [indexStart, indexEnd] - a vector of the start and ending indices
+			% Arg 2: plot axis range in the form [xmin,xmax,ymin,ymax]
+
+			xyrange = [];
+			indices = [];
+			if ~isempty(varargin)
+				indices = varargin{1};
+				if length(varargin) > 1
+					xyrange = varargin{2};
+				end
+			end
+
+			lineWidth = 0.5;
+
+			% Currently same as run visualiser, but saves the movie
+
+			h = figure();
+			axis equal
+			% axis off
+			hold on
+			set(h, 'InvertHardcopy', 'off')
+			set(h,'color','w');
+			set(gca,'Color','k');
+
+			if ~isempty(xyrange)
+				xlim(xyrange(1:2));
+				ylim(xyrange(3:4));
+			end
+
+			if ~isempty(indices)
+				tIdxStart = indices(1);
+				tIdxEnd = indices(2);
+			else
+				tIdxStart = 1;
+				tIdxEnd = length(obj.timeSteps);
+			end
+
+			F = getframe(gca); % Initialise the array
+
+			% Initialise the array with anything
+			patchObjects(1) = patch([1,1],[2,2],obj.cs.GetRGB(6), 'LineWidth', lineWidth);
+
+			for i = tIdxStart:tIdxEnd
+				% i is the time steps
+				[~,J] = size(obj.cells);
+				j = 1;
+				while j <= J && ~isempty(obj.cells{i,j})
+
+					c = obj.cells{i,j};
+					ids = c(1:end-1);
+					colour = c(end);
+					nodeCoords = squeeze(obj.nodes(ids,i,:));
+
+					a = nodeCoords(1,:);
+					b = nodeCoords(2,:);
+
+					x = nodeCoords(:,1);
+					y = nodeCoords(:,2);
+
+					angColour = 2 * abs( atan( (x(1)-x(2)) / (y(1)-y(2))) ) / pi;
+
+					[pillX,pillY] = obj.DrawPill(a,b,r);
+					
+
+					if j > length(patchObjects)
+						patchObjects(j) = patch(pillX, pillY, angColour, 'LineWidth', lineWidth);
+					else
+						patchObjects(j).XData = pillX;
+						patchObjects(j).YData = pillY;
+						patchObjects(j).FaceVertexCData = angColour;
+					end
+
+					j = j + 1;
+
+				end
+				% j will always end up being 1 more than the total number of non empty cells
+
+				for k = length(patchObjects):-1:j
+					patchObjects(k).delete;
+					patchObjects(k) = [];
+				end
+
+				drawnow
+
+				title(sprintf('t = %g',obj.timeSteps(i)),'Interpreter', 'latex');
+				F(end+1) = getframe(gca);
+
+			end
+
+			fileName = [obj.pathToOutput,'animation_angle'];
+
+			if ~isempty(indices)
+				ts = obj.timeSteps(tIdxStart);
+				if tIdxStart == 1
+					ts = 0; % A little hack to make the numbers look nice, technically its lying
+				end
+				te = obj.timeSteps(tIdxEnd);
+				fileName = sprintf('%s_%gto%g',fileName, ts, te );
+			else
+				fileName = sprintf('%s_Full',fileName);
+			end
+
+			writerObj = VideoWriter(fileName,'MPEG-4');
+			writerObj.FrameRate = 10;
+
+			% open the video writer
+			open(writerObj);
+			% write the frames to the video
+			for i=2:length(F)
+				% convert the image to a frame
+				frame = F(i) ;    
+				writeVideo(writerObj, frame);
+			end
+			% close the writer object
+			close(writerObj);
+
+		end
+
 		function PlotRodTimeStep(obj, r, timeStep)
 
 			% Plots a single given timestep
@@ -749,6 +873,7 @@ classdef Visualiser < matlab.mixin.SetGet
 			pillY = pill(:,2);
 
 		end
+
 
 	end
 

@@ -62,6 +62,8 @@ classdef RingSingleAnalysis < Analysis
 			plot(t,C, 'LineWidth', 4);
 			ax = gca;
 			ax.FontSize = 16;
+			tFontSize = 40;
+			title('Ring shape over time','Interpreter', 'latex','FontSize', tFontSize);
 			ylabel('Circularity','Interpreter', 'latex', 'FontSize', 40);xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 40);
 			ylim([0 max(C)]);; xlim([0 max(t)]);
 			SavePlot(obj, h, sprintf('Circularity'));
