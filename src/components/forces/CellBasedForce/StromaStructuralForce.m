@@ -1,41 +1,41 @@
-classdef PolygonCellGrowthForce < AbstractCellBasedForce
-	
-	% Applies energy based methods to drive the cell to a target area and perimeter
-	% based on the energy density parameters
+classdef StromaStructuralForce < AbstractCellBasedForce
+
+	% This applies it only to a single cell representing the stroma.
+	% As it stands, it is a total hack job and I'm not happy with this
+	% approach because it will lead to bloating, but it will get the
+	% job done quickly
+
 
 	properties
 
+		stroma
 		areaEnergyParameter
-		perimeterEnergyParameter
-		surfaceTensionEnergyParameter
+		surfaceEnergyParameter
+		edgeAdhesionParameter
 
 	end
 
 	methods
 
-		function obj = PolygonCellGrowthForce(areaP, perimeterP, tensionP)
+		function obj = StromaStructuralForce(stroma, areaP, surfaceP, adhesionP)
 
-			obj.areaEnergyParameter 			= areaP;
-			obj.perimeterEnergyParameter 		= perimeterP;
-			obj.surfaceTensionEnergyParameter 	= tensionP;
+			% The single cell that represents the stroma
+			obj.stroma = stroma;
+			obj.areaEnergyParameter 	= areaP;
+			obj.surfaceEnergyParameter 	= surfaceP;
+			obj.edgeAdhesionParameter 	= adhesionP;
 			
 		end
 
 		function AddCellBasedForces(obj, cellList)
 
-			% For each cell in the list, calculate the forces
-			% and add them to the nodes
+			% Needs to take a cell list to keep the abstract base class happy
 
-			for i = 1:length(cellList)
+			
+			obj.AddTargetAreaForces(obj.stroma);
+			obj.AddTargetPerimeterForces(obj.stroma);
+			obj.AddAdhesionForces(obj.stroma);
 
-				c = cellList(i);
-				if c.cellType ~= 5 % As long as it is not stromal type
-					obj.AddTargetAreaForces(c);
-					obj.AddTargetPerimeterForces(c);
-					obj.AddSurfaceTensionForces(c);
-				end
-
-			end
 
 		end
 
@@ -44,11 +44,11 @@ classdef PolygonCellGrowthForce < AbstractCellBasedForce
 			% This force comes from "A dynamic cell model for the formation of epithelial
 			% tissues", Nagai, Honda 2001. It comes from section 2.2 "Resistance force against
 			% cell deformation". This force will push to cell to a target area. If left unchecked
-			% the cell will end up at it's target area. The equation governing this energy is
+			% the cell will end up at it's target area, unlike the "Adhesion" force, which
+			% will send the cell to a point. The equation governing this energy is
 			% U = \rho h_0^2 (A - A_0)^2
 			% Here \rho is a area energy parameter, h_0 is the equilibrium height (in 3D)
-			% and A_0 is the equilibrium area. In this force, \rho h_0^2 is replaced by \alpha
-			% referred to areaEnergyParameter
+			% and A_0 is the equilibrium area.
 
 			% This energy allows the cell to compress, but penalises the compression quadratically
 			% The cyctoplasm of a cell is mostly water, so can be assumed incompressible, but
@@ -111,20 +111,21 @@ classdef PolygonCellGrowthForce < AbstractCellBasedForce
 
 		function AddTargetPerimeterForces(obj, c)
 
-			% This calculates the force applied to the cell boundary due to a difference
-			% between current perimeter and target perimeter. The energy held in the boundary
-			% is given by
-			% U = \beta (p - P_0)^2 where p is the current perimeter and P_0 is the equilibrium
-			% perimeter. The current perimeter is found by summing the magnitudes of the
-			% vectors representing the edges around the perimeter.
-			% To convert the energy to a force, the -ve divergence is taken with respect to the
-			% variables identifying a given node's coordinates. Evidently the only vectors that
-			% contribute are the one that contain the node.
+			% This force comes from Chaste, and apparently it was sourced from a later Nagai Honda
+			% paper, but I can't seem to find it. For rehashing to use the ordered list of nodes
+			% I am just copying exactly what I had before.
+
+			% I feel like this is exactly the same as the "adhesion" force, except for the
+			% tendency to a given perimeter, rather than a zero length edge
+
+			% In fact, it is precisely the same as "adhesion" force, except it applies to the
+			% whole perimeter length, node the individual element length
 			
 			currentPerimeter 	= c.GetCellPerimeter();
 			targetPerimeter 	= c.GetCellTargetPerimeter();
 
-			magnitude = 2 * obj.perimeterEnergyParameter * (currentPerimeter - targetPerimeter);
+			% Where does the factor of 2 come from?
+			magnitude = 2 * obj.surfaceEnergyParameter * (currentPerimeter - targetPerimeter);
 
 
 			for i = 1:length(c.elementList)
@@ -141,8 +142,13 @@ classdef PolygonCellGrowthForce < AbstractCellBasedForce
 
 		end
 
-		function AddSurfaceTensionForces(obj, c)
+		function AddAdhesionForces(obj, c)
 
+			% In the context of a 2D model...
+
+			%%% THIS IS A MESH REGULARISING FORCE - IT SHOULD BE REMOVED AND TREATED AS
+			%%% SUCH. IT WILL TEND TO MAKE THE ELEMENTS OF A CELL A UNIFORM SIZE, SO IT
+			%%% IS STILL HGHLY USEFUL, BUT SHOULD NOT BE TREATED AS A PHYSICAL FORCE
 
 			% This force comes from "A dynamic cell model for the formation of epithelial
 			% tissues", Nagai, Honda 2001. It comes from section 2.1 "Tension of the cell boundary"
@@ -157,7 +163,7 @@ classdef PolygonCellGrowthForce < AbstractCellBasedForce
 			% The resulting force comes by taking the -ve gradient of the energy, giving
 			% -\sigma_{\alpha,\beta} (r_{i} - r_{j}) / |r_{i} - r_{j}|
 
-			% Since the parameter \sigma is specified for any cell pair in the paper, it can be used
+			% Since the parameter \sigma is specified for any cell pair, it can be used
 			% as a way for any two cells to minimise their shared boundary. If used this way
 			% it should also account for the tendency for adhesion between two cells, meaning
 			% that the parameter could go negative.
@@ -179,7 +185,7 @@ classdef PolygonCellGrowthForce < AbstractCellBasedForce
 				e = c.elementList(i);
 				r = e.GetVector1to2();
 
-				f = obj.surfaceTensionEnergyParameter * r;
+				f = obj.edgeAdhesionParameter * r;
 
 				e.Node1.AddForceContribution(f);
 				e.Node2.AddForceContribution(-f);
