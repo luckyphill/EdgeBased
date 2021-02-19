@@ -11,9 +11,9 @@ simName=$1
 paramFile=$2
 
 module load arch/haswell
-module load matlab/2019a
+module load matlab
 
-mkdir -p output
+export EDGEDIR='/hpcfs/users/a1738927/Research/EdgeBased'
 
 echo "array_job_index: $SLURM_ARRAY_TASK_ID"
 
