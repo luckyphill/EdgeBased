@@ -21,9 +21,9 @@ classdef NoAreaEffect < Analysis
 		b = 10;
 
 		sae = [2:2:40];
-		spe = [2:0.5:5];
+		spe = [2:19];
 
-		seed = 1:20;
+		seed = 1:50;
 
 		targetTime = 500;
 
@@ -36,8 +36,8 @@ classdef NoAreaEffect < Analysis
 
 		parameterSet = []
 
-		simulationRuns = 20
-		slurmTimeNeeded = 24
+		simulationRuns = 50
+		slurmTimeNeeded = 12
 		simulationDriverName = 'ManageLayerOnStroma'
 		simulationInputCount = 7
 		
@@ -56,18 +56,21 @@ classdef NoAreaEffect < Analysis
 
 		function MakeParameterSet(obj)
 
+			% n, p, g, b, f, sae, spe, seed
 
 			params = [];
 
-			for p = obj.p
-				for g = obj.g
-					for w = obj.w
+			for n = obj.n
+				for p = obj.p
+					for g = obj.g
 						for b = obj.b
-							for sae = obj.sae
-								for spe = obj.spe
+							for f = obj.f
+								for sae = obj.sae
+									for spe = obj.spe
 
-									params(end+1,:) = [2*w,p,g,w,b,sae,spe];
+										params(end+1,:) = [n,p,g,b,f,sae,spe];
 
+									end
 								end
 							end
 						end
@@ -92,16 +95,21 @@ classdef NoAreaEffect < Analysis
 
 		function AssembleData(obj)
 
-			% Used when there is at least some data ready
+			buckleThreshold = 1.05;
+
 			MakeParameterSet(obj);
-			result = nan(1,length(obj.parameterSet));
+
+			buckleOutcome = [];
+			buckleTime = [];
+
 			for i = 1:length(obj.parameterSet)
 				s = obj.parameterSet(i,:);
+				% n, p, g, b, f, sae, spe, seed
 				n = s(1);
 				p = s(2);
 				g = s(3);
-				w = s(4);
-				b = s(5);
+				b = s(4);
+				f = s(5);
 				sae = s(6);
 				spe = s(7);
 
@@ -109,21 +117,24 @@ classdef NoAreaEffect < Analysis
 				bottom = [];
 				for j = obj.seed
 					% try
-						a = RunLayerOnStroma(n,p,g,w,b,sae,spe,j);
+						a = ManageLayerOnStroma(n,p,g,b,f,sae,spe,j);
 						a.LoadSimulationData();
-						bottom = Concatenate(obj, bottom, a.data.bottomWiggleData');
+						if max(a.data.bottomWiggleData) >= buckleThreshold
+							buckleOutcome(i,j) = true;
+							buckleTime(i,j) = find(a.data.bottomWiggleData >= buckleThreshold,1) * 20 * a.dt;
+						else
+							buckleOutcome(i,j) = false;
+							buckleTime(i,j) = obj.targetTime;
+						end
+
+
 					% end
 				end
-
-				b = nanmean(bottom);
-
-				result(i) = max(b);
-
 
 			end
 
 
-			obj.result = result;
+			obj.result = {buckleOutcome, buckleTime};
 
 			
 
@@ -131,32 +142,30 @@ classdef NoAreaEffect < Analysis
 
 		function PlotData(obj)
 
-			for p = obj.p
-				for g = obj.g
+			buckleOutcome = obj.result{1};
+			buckleTime = obj.result{2};
+
+			h = figure;
+
+			Lidx = obj.parameterSet(:,2) == obj.p;
+			tempR = obj.result(L);
+			Lidx = obj.parameterSet(Lidx,3) == obj.g;
+			data = tempR(Lidx);
+
+			data = reshape(obj.result,length(obj.sae),length(obj.spe));
+
+			[A,P] = meshgrid(obj.sae,obj.spe);
+
+			surf(A,P,data);
+			xlabel('Area force parameter','Interpreter', 'latex', 'FontSize', 15);ylabel('Perimeter force parameter','Interpreter', 'latex', 'FontSize', 15);
+			title(sprintf('Long term max wiggle ratio for stroma force params'),'Interpreter', 'latex', 'FontSize', 22);
+			shading interp
+			xlim([2 20]);ylim([1 10]);
+			colorbar;view(90,-90);caxis([1 1.5]);
+
+			SavePlot(obj, h, sprintf('BodyParams'));
 
 
-					h = figure;
-
-					Lidx = obj.parameterSet(:,2) == p;
-					tempR = obj.result(L);
-					Lidx = obj.parameterSet(Lidx,3) == g;
-					data = tempR(Lidx);
-
-					data = reshape(obj.result,length(obj.sae),length(obj.spe));
-
-					[A,P] = meshgrid(obj.sae,obj.spe);
-
-					surf(A,P,data);
-					xlabel('Area force parameter','Interpreter', 'latex', 'FontSize', 15);ylabel('Perimeter force parameter','Interpreter', 'latex', 'FontSize', 15);
-					title(sprintf('Long term max wiggle ratio for stroma force params'),'Interpreter', 'latex', 'FontSize', 22);
-					shading interp
-					xlim([2 20]);ylim([1 10]);
-					colorbar;view(90,-90);caxis([1 1.5]);
-
-					SavePlot(obj, h, sprintf('BodyParams'));
-
-				end
-			end
 
 		end
 

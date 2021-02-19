@@ -1,23 +1,15 @@
 classdef ManageLayerOnStroma < MatlabSimulation
-	% Runs the CellGrowing simulation and handles all of the 
-	% data processing and storage
+	% Manages the running and data handling of the LayerOnStroma simulation
+	% for the various analyses around buckling
 
 
 	properties (SetAccess = immutable)
-		% The name of the actual chaste test function as a string. This will
-		% be used to build the simulation command and directory structure
-
-		% Since this is a concrete implementation of a chasteSimulation the
-		% name of the test will never be changed
 
 		matlabTest = 'LayerOnStroma'
 
 	end
 
 	properties (SetAccess = private)
-		% These are the input variables for CellGrowing
-		% If new input variables are added, this may
-		% need to be updated
 
 		% Number of cells
 		n 			double {mustBeNonnegative}
@@ -26,10 +18,11 @@ classdef ManageLayerOnStroma < MatlabSimulation
 		p 			double {mustBeNonnegative}
 		g 			double {mustBeNonnegative}
 
+		% growthTriggerFraction
 		f			double {mustBeNonnegative}
+
+		% Force parameters
 		b			double {mustBeNonnegative}
-
-
 		sae			double {mustBeNonnegative}
 		spe			double {mustBeNonnegative}
 
@@ -45,19 +38,12 @@ classdef ManageLayerOnStroma < MatlabSimulation
 
 	properties
 
-		buckledWiggleRatio = 2
+		buckledWiggleRatio = 1.1
 
 	end
 
 	methods
 		function obj = ManageLayerOnStroma(n, p, g, b, f, sae, spe, seed)
-			% The constructor for the runLayerOnStroma object
-			% This expects the variables to be handed in as maps, which helps
-			% make some of the generation functions easier and less cluttered to write
-			% In addition, it needs to know where to find the 'Research' folder
-			% so the functions can be used on multiple different machines
-			% without needing to manually change
-			% the path each time the script moves to another computer
 
 			obj.n 		= n;
 			obj.p 		= p;
@@ -72,6 +58,11 @@ classdef ManageLayerOnStroma < MatlabSimulation
 
 			obj.simObj = LayerOnStroma(n, p, g, b, f, sae, spe, seed);
 			obj.simObj.dt = obj.dt;
+			
+			% Remove the default spatial state output, and add the wiggle ratio output
+			remove(obj.simObj.simData,'spatialState');
+			obj.simObj.AddSimulationData(BottomWiggleRatio());
+			obj.simObj.dataWriters = WriteBottomWiggleRatio(20,obj.simObj.pathName);
 
 			obj.outputTypes = {BottomWiggleData};
 
