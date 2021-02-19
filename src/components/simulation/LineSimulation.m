@@ -14,9 +14,9 @@ classdef LineSimulation < AbstractCellSimulation
 
 		function obj  = LineSimulation()
 
-			obj.AddSimulationData(WiggleRatio());
+			% obj.AddSimulationData(WiggleRatio());
 			% obj.AddSimulationData(TopWiggleRatio());
-			% obj.AddSimulationData(BottomWiggleRatio());
+			obj.AddSimulationData(BottomWiggleRatio());
 			obj.AddSimulationData(CentreLine());
 			obj.AddSimulationData(BoundaryCells());
 

@@ -45,9 +45,6 @@ classdef MatlabSimulation < SimulationDriver
 		% The rng seed that defines the starting configuration
 		seedParams containers.Map 
 
-		% The path to the directory containing the Research directory
-		researchPath
-
 		% The text from any error that gets tripped during a simulation
 		% that causes it to fail.
 		errorText
@@ -78,8 +75,8 @@ classdef MatlabSimulation < SimulationDriver
 			% The 'system' command will always work in Matlab. It doesn't care what you type
 			% it just reports back what the console said
 			obj.errorFile = [obj.saveLocation,'output.err'];
-			
-			fprintf('Running %s with input parameters:\n', obj.matlabTest);
+			mkdir(obj.saveLocation);
+			fprintf('Running %s with given input parameters\n', obj.matlabTest);
 			% Delete the previous error file
 			[~,~] = system(['rm ', obj.errorFile]);
 
@@ -94,7 +91,7 @@ classdef MatlabSimulation < SimulationDriver
 			
 			catch EM
 				% The simulation ended in an unexpected way, save console output to the error file
-				fid = fopen(obj.errorFile,'w');
+				fid = fopen(obj.errorFile,'w+');
 				fprintf(fid, EM.message);
 				fclose(fid);
 				fprintf('Problem running simulation. Error message saved in:\n%s', obj.errorFile);

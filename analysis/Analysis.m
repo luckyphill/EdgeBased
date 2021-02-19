@@ -39,6 +39,8 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 
 		specifySeedDirectly = false
 
+		usingHPC = false
+
 	end
 
 	methods (Abstract)
@@ -209,8 +211,7 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 				edgeBasedPath(end+1) = '/';
 			end
 
-			% Only relevant when outputting HPC simulation files
-			% obj.simulationFileLocation = [edgeBasedPath, 'phoenix/', obj.analysisName, '/'];
+			
 
 			obj.imageSaveLocation = [edgeBasedPath, 'Images/', obj.analysisName, '/'];
 
@@ -226,9 +227,14 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 				mkdir(obj.dataSaveLocation);
 			end
 
-			% if exist(obj.simulationFileLocation,'dir')~=7
-			% 	mkdir(obj.simulationFileLocation);
-			% end
+			% Only relevant when outputting HPC simulation files
+			if obj.usingHPC
+				obj.simulationFileLocation = [edgeBasedPath, 'HPC/', obj.analysisName, '/'];
+
+				if exist(obj.simulationFileLocation,'dir')~=7
+					mkdir(obj.simulationFileLocation);
+				end
+			end
 
 		end
 

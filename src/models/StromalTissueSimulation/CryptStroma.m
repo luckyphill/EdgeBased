@@ -16,29 +16,44 @@ classdef CryptStroma < LineSimulation
 
 	methods
 
-		function obj = CryptStroma(p, g, w, b, seed, varargin)
-			% All the initilising
+		function obj = CryptStroma(p, g, b, f, sae, spe, seed)
+			
 			obj.SetRNGSeed(seed);
 
-			% We keep the option of diffent box sizes for efficiency reasons
-			if length(varargin) > 0
-				if length(varargin) == 3
-					areaEnergy = varargin{1};
-					perimeterEnergy = varargin{2};
-					adhesionEnergy = varargin{3};
-				else
-					error('Error using varargin, must have 3 args, areaEnergy, perimeterEnergy, and adhesionEnergy');
-				end
-			else
-				areaEnergy = 20;
-				perimeterEnergy = 10;
-				adhesionEnergy = 1;
-			end
+			epiCellType = 1;
+			stromalCellType = 5;
+
+			% N is the number of cells in the layer. This in turn defines the width
+			% of the stromal blob supporting the cells
+			% p, the pause/resting phase duration
+			% g, the growing phase duration
+			% b, The interaction spring force parameter
+			% sae, the stromal area energy factor
+			% spe, the stroma perimeter energy factor
+
+			% Contact inhibition fraction
+			% f = 0.9;
+
+			% The asymptote, separation, and limit distances for the interaction force
+			dAsym = 0;
+			dSep = 0.1;
+			dLim = 0.2;
+
+			% The energy densities for the cell growth force
+			areaEnergy = 20;
+			perimeterEnergy = 10;
+			tensionEnergy = 1;
+
+			% y axis Position where differentation occurs
+			height = 2.5;
+
+			% Allowable epithelial x width
+			w = 10;
 
 			% This simulation is symetric about the y axis, so the width is evenly
 			% split between each part
 
-			k = BoundaryCellKiller(-w/2, w/2);
+			k = BoundaryCellKiller(-w/2+2, w/2-2);
 
 			obj.AddTissueLevelKiller(k);
 
@@ -124,27 +139,27 @@ classdef CryptStroma < LineSimulation
 			elementList(end + 1) = Element(nodeList(end), nodeList(1), obj.GetNextElementId() );
 
 			ccm = NoCellCycle();
-			ccm.colour = 5;
+			ccm.colour = stromalCellType;
 
-			s = CellFree(ccm, nodeList, elementList, obj.GetNextCellId());
+			stroma = CellFree(ccm, nodeList, elementList, obj.GetNextCellId());
 
 			% Critical to stop the ChasteNagaiHondaForce beign applied to the stroma
-			s.cellType = 2;
+			stroma.cellType = stromalCellType;
 
 			% Make a maltab polygon to exploit the area and perimeter calculation
-
-			s.grownCellTargetArea = polyarea(pos(:,1), pos(:,2));
+			stroma.grownCellTargetArea = polyarea(pos(:,1), pos(:,2));
 
 			perim = 0;
 			for i = 1:length(elementList)
 				perim = perim + elementList(i).GetLength();
 			end
 
-			s.cellData('targetPerimeter') = TargetPerimeterStroma(perim);
+			stroma.cellData('targetPerimeter') = TargetPerimeterStroma(perim);
 
 			obj.AddNodesToList( nodeList );
 			obj.AddElementsToList( elementList );
-			obj.cellList = s;
+			obj.cellList = [stroma];
+
 
 			%---------------------------------------------------
 			% Make cells that will populate the crypt
@@ -191,11 +206,13 @@ classdef CryptStroma < LineSimulation
 
 			% Cell cycle model
 
-			ccm = WntCellCycle(p, g);
+			ccm = WntCellCycle(p, g, height, f, obj.dt);
 
 			% Assemble the cell
 
-			obj.cellList(end + 1) = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
+			c = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
+			c.cellType = epiCellType;
+			obj.cellList(end + 1) = c;
 
 			boundaryCellMap = containers.Map({'right'}, {obj.cellList(end)});
 			%---------------------------------------------------
@@ -216,9 +233,11 @@ classdef CryptStroma < LineSimulation
 
 				obj.AddElementsToList([elementBottom, elementRight, elementTop]);
 
-				ccm = WntCellCycle(p, g);
+				ccm = WntCellCycle(p, g, height, f, obj.dt);
 
-				obj.cellList(end + 1) = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
+				c = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
+				c.cellType = epiCellType;
+				obj.cellList(end + 1) = c;
 
 			end
 
@@ -230,24 +249,17 @@ classdef CryptStroma < LineSimulation
 			% Add in the forces
 			%---------------------------------------------------
 
-			% Nagai Honda forces
-			obj.AddCellBasedForce(ChasteNagaiHondaForce(areaEnergy, perimeterEnergy, adhesionEnergy));
+			% Cell growth force
+			obj.AddCellBasedForce(PolygonCellGrowthForce(areaEnergy, perimeterEnergy, tensionEnergy));
 
 			% A special distinct force for the stroma
-			obj.AddCellBasedForce(StromaNagaiHondaForce(s, areaEnergy, perimeterEnergy, 0));
-
-			% Corner force to prevent very sharp corners
-			obj.AddCellBasedForce(CornerForceCouple(0.1,pi/2));
-
-			% Element force to stop elements becoming too small
-			obj.AddElementBasedForce(EdgeSpringForce(@(n,l) 20 * exp(1-25 * l/n)));
+			obj.AddCellBasedForce(StromaStructuralForce(stroma, sae, spe, 0));
 
 			% Node-Element interaction force - requires a SpacePartition
-			obj.AddNeighbourhoodBasedForce(StromaAdhesionForce(0.1, b, obj.dt));
-
-			if b <= 0
-				error("Force must be greater than 0")
-			end
+			% Handles different interaction strengths between different cell types
+			cellTypes = [epiCellType,stromalCellType];
+			att = [0,b;b,0]; % No attraction between epithelial cells
+			obj.AddNeighbourhoodBasedForce(CellTypeInteractionForce(att, repmat(b,2), repmat(dAsym,2), repmat(dSep,2), repmat(dLim,2), cellTypes, obj.dt, true));
 			
 			%---------------------------------------------------
 			% Add space partition
@@ -282,7 +294,7 @@ classdef CryptStroma < LineSimulation
 			%---------------------------------------------------
 
 			obj.AddSimulationData(SpatialState());
-			pathName = sprintf('CryptStroma/p%gg%gw%gb%g_seed%g/',p,g,w,b,seed);
+			pathName = sprintf('CryptStroma/p%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%g_seed%g/',p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy,seed);
 			obj.AddDataWriter(WriteSpatialState(100,pathName));
 
 			%---------------------------------------------------

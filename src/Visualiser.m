@@ -180,15 +180,27 @@ classdef Visualiser < matlab.mixin.SetGet
 		% Really need to abstract this so the code isn't copied over and over
 		function VisualiseCells(obj, varargin)
 
-			% This will take the formatted data and produce an animated
-			% plot of the simulation. At the minute it just runs a for loop
+			% varargin 
+			% Arg 1: [indexStart, indexEnd] - a vector of the start and ending indices. Leave empty to run the whole simulation
+			% Arg 2: plot axis range in the form [xmin,xmax,ymin,ymax]
 
-			% The number of values in a row that correspond to
-			% one cell
+			xyrange = [];
+			indices = [];
+			if ~isempty(varargin)
+				indices = varargin{1};
+				if length(varargin) > 1
+					xyrange = varargin{2};
+				end
+			end
 
 			h = figure();
 			axis equal
 			hold on
+
+			if ~isempty(xyrange)
+				xlim(xyrange(1:2));
+				ylim(xyrange(3:4));
+			end
 
 			[I,~] = size(obj.cells);
 
@@ -197,11 +209,13 @@ classdef Visualiser < matlab.mixin.SetGet
 			fillObjects(1) = fill([1,1],[2,2],'r');
 
 			startI =  1;
-			if ~isempty(varargin)
-				startI = varargin{1};
+			endI = I;
+			if ~isempty(indices)
+				startI = indices(1);
+				endI = indices(2);
 			end
 
-			for i = startI:I
+			for i = startI:endI
 				% i is the time steps
 				[~,J] = size(obj.cells);
 				j = 1;

@@ -19,7 +19,7 @@ classdef ColourSet < matlab.mixin.SetGet
 		function obj = ColourSet()
 
 			% Don't really know a better way to set the property 
-			names = {'PAUSE','GROW','STOPPED','DYING','STROMA', 'PILL', 'PILLGROW', 'ECOLI','ECOLISTOPPED'};
+			names = {'PAUSE','GROW','STOPPED','DYING','STROMA', 'PILL', 'PILLGROW', 'ECOLI','ECOLISTOPPED', 'DIFFERENTIATED'};
 
 			values ={[0.9375 0.7383 0.6562],
 						[0.6562 0.8555 0.9375],
@@ -29,13 +29,14 @@ classdef ColourSet < matlab.mixin.SetGet
 						[0.2812 0.6641 0.2969],
 						[0.6641 0.2812 0.6484],
 						[0.7578 0.8633 0.3359],
-						[0.4180 0.5000 0.0977]};
+						[0.4180 0.5000 0.0977],
+						[0.9375 0.8945 0.8750]};
 
 			obj.colourMap = containers.Map(names,values);
 
-			obj.numToName = containers.Map( {1,2,3,4,5,6,7,8,9}, names);
+			obj.numToName = containers.Map( {1,2,3,4,5,6,7,8,9,10}, names);
 
-			obj.nameToNum = containers.Map( names, {1,2,3,4,5,6,7,8,9});
+			obj.nameToNum = containers.Map( names, {1,2,3,4,5,6,7,8,9,10});
 
 		end
 

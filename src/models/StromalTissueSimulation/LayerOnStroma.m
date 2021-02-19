@@ -14,13 +14,19 @@ classdef LayerOnStroma < LineSimulation
 
 		samplingMultiple = 100;
 
+		pathName
+		simulationOutputLocation
+
 	end
 
 	methods
 
-		function obj = LayerOnStroma(N, p, g, b, sae, spe, seed)
+		function obj = LayerOnStroma(N, p, g, b, f, sae, spe, seed)
 			
 			obj.SetRNGSeed(seed);
+
+			epiCellType = 1;
+			stromalCellType = 5;
 
 			% N is the number of cells in the layer. This in turn defines the width
 			% of the stromal blob supporting the cells
@@ -31,7 +37,7 @@ classdef LayerOnStroma < LineSimulation
 			% spe, the stroma perimeter energy factor
 
 			% Contact inhibition fraction
-			f = 0.9;
+			% f = 0.9;
 
 			% The asymptote, separation, and limit distances for the interaction force
 			dAsym = 0;
@@ -90,7 +96,9 @@ classdef LayerOnStroma < LineSimulation
 
 			% Assemble the cell
 
-			obj.cellList = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
+			c = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
+			c.cellType = epiCellType;
+			obj.cellList = c;
 
 
 			for i = 2:N
@@ -117,7 +125,9 @@ classdef LayerOnStroma < LineSimulation
 
 				ccm = GrowthContactInhibition(p, g, f, obj.dt);
 
-				obj.cellList(i) = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
+				c = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
+				c.cellType = epiCellType;
+				obj.cellList(end + 1) = c;
 
 			end
 
@@ -151,12 +161,12 @@ classdef LayerOnStroma < LineSimulation
 			elementList(end + 1) = Element(nodeList(end), nodeList(1), obj.GetNextElementId() );
 
 			ccm = NoCellCycle();
-			ccm.colour = 5;
+			ccm.colour = stromalCellType;
 
 			stroma = CellFree(ccm, nodeList, elementList, obj.GetNextCellId());
 
 			% Critical to stop the ChasteNagaiHondaForce beign applied to the stroma
-			stroma.cellType = 5;
+			stroma.cellType = stromalCellType;
 
 			stroma.grownCellTargetArea = (rightBoundary - leftBoundary) * (stromaTop - stromaBottom);
 
@@ -177,7 +187,11 @@ classdef LayerOnStroma < LineSimulation
 			obj.AddCellBasedForce(StromaStructuralForce(stroma, sae, spe, 0));
 
 			% Node-Element interaction force - requires a SpacePartition
-			obj.AddNeighbourhoodBasedForce(CellCellInteractionForce(b, b, dAsym, dSep, dLim, obj.dt, true));
+			% Handles different interaction strengths between different cell types
+			cellTypes = [epiCellType,stromalCellType];
+			att = [0,b;
+				   b,0]; % No attraction between epithelial cells or between stromal cells
+			obj.AddNeighbourhoodBasedForce(CellTypeInteractionForce(att, repmat(b,2), repmat(dAsym,2), repmat(dSep,2), repmat(dLim,2), cellTypes, obj.dt, true));
 			
 			%---------------------------------------------------
 			% Add space partition
@@ -194,24 +208,24 @@ classdef LayerOnStroma < LineSimulation
 			% nodeList comes from building the stroma
 			obj.AddSimulationModifier(   PinNodes(  [nodeList(1), nodeList(end-2:end)]  )   );
 
-			% %---------------------------------------------------
-			% % Add the modfier to keep the boundary cells at the
-			% % same vertical position
-			% %---------------------------------------------------
-			
-			% obj.AddSimulationModifier(ShiftBoundaryCells());
 
 			%---------------------------------------------------
 			% Add the data writers
 			%---------------------------------------------------
 
-			obj.AddSimulationData(SpatialState());
-			pathName = sprintf('LayerOnStroma/n%gp%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%g_seed%g/',N,p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy,seed);
-			obj.AddDataWriter(WriteSpatialState(20,pathName));
+			% obj.AddSimulationData(SpatialState());
+			obj.AddSimulationData(BottomWiggleRatio());
+			obj.pathName = sprintf('LayerOnStroma/n%gp%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%g_seed%g/',N,p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, seed);
+			% obj.AddDataWriter(WriteSpatialState(20,obj.pathName));
+			obj.AddDataWriter(WriteBottomWiggleRatio(20,obj.pathName));
 
 			%---------------------------------------------------
 			% All done. Ready to roll
 			%---------------------------------------------------
+
+
+			% A little hack to make the parameter sweeps slightly easier to handle
+			obj.simulationOutputLocation = [getenv('EDGEDIR'),'/SimulationOutput/' obj.pathName];
 
 		end
 
