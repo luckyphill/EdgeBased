@@ -31,8 +31,8 @@ do
 done < $paramFile
 
 if [ $found = 1 ]; then
-	echo "matlab -nodisplay -nodesktop -r cd ../../../; addpath(genpath(pwd)); obj = $simName($a, $b, $c, $d, $e, $seed); obj.GenerateSimulationData(); quit()"
-    matlab -nodisplay -nodesktop -r "cd ../../../; addpath(genpath(pwd)); obj = $simName($a, $b, $c, $d, $e, $seed); obj.GenerateSimulationData(); quit()"
+	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath(pwd)); obj = $simName($a, $b, $c, $d, $e, $seed); obj.GenerateSimulationData(); quit()"
+    matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath(pwd)); obj = $simName($a, $b, $c, $d, $e, $seed); obj.GenerateSimulationData(); quit()"
 else 
   echo "SLURM_ARRAY_TASK_ID $SLURM_ARRAY_TASK_ID is outside range of input file $paramFile" 
 fi
