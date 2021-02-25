@@ -147,21 +147,17 @@ classdef CoarseSweepEnergy < Analysis
 
 			h = figure;
 
-			Lidx = obj.parameterSet(:,2) == obj.p;
-			tempR = obj.result(L);
-			Lidx = obj.parameterSet(Lidx,3) == obj.g;
-			data = tempR(Lidx);
-
-			data = reshape(obj.result,length(obj.sae),length(obj.spe));
-
-			[A,P] = meshgrid(obj.sae,obj.spe);
-
-			surf(A,P,data);
-			xlabel('Area force parameter','Interpreter', 'latex', 'FontSize', 15);ylabel('Perimeter force parameter','Interpreter', 'latex', 'FontSize', 15);
-			title(sprintf('Long term max wiggle ratio for stroma force params'),'Interpreter', 'latex', 'FontSize', 22);
-			shading interp
-			xlim([2 20]);ylim([1 10]);
-			colorbar;view(90,-90);caxis([1 1.5]);
+			scatter(obj.parameterSet(:,7), obj.parameterSet(:,6), 100, sum(buckleOutcome,2)/length(obj.seed),'filled');
+			ylabel('Area energy parameter','Interpreter', 'latex', 'FontSize', 15);xlabel('Perimeter energy parameter','Interpreter', 'latex', 'FontSize', 15);
+			title(sprintf('Proportion buckled, p=%g, g=%g',obj.p,obj.g),'Interpreter', 'latex', 'FontSize', 22);
+			ylim([min(obj.sae)-1, max(obj.sae)+1]);xlim([min(obj.spe)-1, max(obj.spe)+1]);
+			colorbar; caxis([0 1]);
+			colormap jet;
+			ax = gca;
+			c = ax.Color;
+			ax.Color = 'black';
+			set(h, 'InvertHardcopy', 'off')
+			set(h,'color','w');
 
 			SavePlot(obj, h, sprintf('BodyParams'));
 
