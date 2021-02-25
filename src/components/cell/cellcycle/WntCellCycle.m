@@ -19,8 +19,6 @@ classdef WntCellCycle < AbstractCellCycleModel
 
 		differentiated = false;
 
-		height
-
 		growthTriggerFraction = 1
 
 
@@ -29,19 +27,19 @@ classdef WntCellCycle < AbstractCellCycleModel
 		inhibitedColour
 		differentiatedColour
 
-		dt
+		tissue % A pointer to the whole simulation
 
 	end
 
 
 	methods
 
-		function obj = WntCellCycle(p, g, h, f, dt)
+		function obj = WntCellCycle(p, g, f, t)
 			obj.SetPausePhaseDuration(p);
 			obj.SetGrowingPhaseDuration(g);
-			obj.height = h;
 			obj.growthTriggerFraction = f;
-			obj.dt = dt;
+			
+			obj.tissue = t;
 
 			% By default cell will start off in the pause phase
 			% (actually, this will depend somewhat on the randomly
@@ -60,24 +58,6 @@ classdef WntCellCycle < AbstractCellCycleModel
 		% Could probably add in a phase tracking variable that gets updated here
 		function AgeCellCycle(obj, dt)
 
-			% Using the AgeCellCycle method, determine whether the cell is differentiated
-			% by checking it's height. This is a quick hack to get it working.
-			% The height is a proxy for Wnt concentration
-			% The cell can only become differentiated if the cell is in the PAUSE phase
-			% obj.age = obj.age + dt;
-			% if ~obj.differentiated
-			% 	c = obj.containingCell;
-			% 	if obj.age > obj.pausePhaseDuration
-			% 		obj.colour = obj.colourSet.GetNumber('GROW');
-			% 	else
-			% 		centre = obj.containingCell.GetCellCentre();
-			% 		if centre(2) > obj.height
-			% 			obj.differentiated = true;
-			% 			obj.colour = obj.colourSet.GetNumber('STOPPED');
-			% 		end
-			% 	end
-			% end
-
 
 			obj.age = obj.age + dt;
 
@@ -92,7 +72,7 @@ classdef WntCellCycle < AbstractCellCycleModel
 					% If the cell is not already growing, and it passes
 					% the limiting heigh for proliferation, then flag it as
 					% differentiated
-					if centre(2) > obj.height
+					if centre(2) > obj.tissue.simData('wntCutoff').GetData(obj.tissue);
 						obj.differentiated = true;
 						obj.colour = obj.differentiatedColour;
 					end
@@ -104,7 +84,7 @@ classdef WntCellCycle < AbstractCellCycleModel
 						% Since this already assumes the cell is at the end of
 						% pause phase, this will occur when the cell is ready to
 						% start growing, except for being to compressed
-						obj.pausePhaseDuration = obj.pausePhaseDuration + obj.dt;
+						obj.pausePhaseDuration = obj.pausePhaseDuration + obj.tissue.dt;
 						obj.colour = obj.inhibitedColour;
 					else
 						obj.colour = obj.growthColour;
@@ -118,7 +98,7 @@ classdef WntCellCycle < AbstractCellCycleModel
 
 		function newCCM = Duplicate(obj)
 
-			newCCM = WntCellCycle(obj.meanPausePhaseDuration, obj.meanGrowingPhaseDuration, obj.height, obj.growthTriggerFraction, obj.dt);
+			newCCM = WntCellCycle(obj.meanPausePhaseDuration, obj.meanGrowingPhaseDuration, obj.growthTriggerFraction, obj.tissue);
 			newCCM.SetAge(0);
 			newCCM.colour = obj.colourSet.GetNumber('PAUSE');
 

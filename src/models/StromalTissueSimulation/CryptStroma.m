@@ -16,7 +16,7 @@ classdef CryptStroma < LineSimulation
 
 	methods
 
-		function obj = CryptStroma(p, g, b, f, sae, spe, seed)
+		function obj = CryptStroma(p, g, b, f, sae, spe, nh, ch, wnt, seed)
 			
 			obj.SetRNGSeed(seed);
 
@@ -30,6 +30,9 @@ classdef CryptStroma < LineSimulation
 			% b, The interaction spring force parameter
 			% sae, the stromal area energy factor
 			% spe, the stroma perimeter energy factor
+			% nh = nicheHeight, the distance from the bottom of the stroma to the bottom of the crypt
+			% ch = cryptHeight, the length from top to bottom of the crypt
+			% wnt = wntCutoff, the distance from the bottom of the crypt to the point where differentiation occurs
 
 			% Contact inhibition fraction
 			% f = 0.9;
@@ -46,8 +49,14 @@ classdef CryptStroma < LineSimulation
 
 			
 
-			% Allowable epithelial x width
+			% Parameters defining the shape of the stroma
 			w = 10;
+			halfWidth = w/2;
+			nicheRadius = 1.5;
+			% nicheHeight = nh;
+			% cryptHeight = ch;
+			% wntCutoff = wnt;
+			cryptSideLength = ch - nicheRadius;
 
 			% This simulation is symetric about the y axis, so the width is evenly
 			% split between each part
@@ -56,15 +65,10 @@ classdef CryptStroma < LineSimulation
 
 			obj.AddTissueLevelKiller(k);
 
-			halfWidth = w/2;
-			nicheRadius = 1.5;
-			nicheHeight = 5;
-			cryptHeight = 5;
+			
+			
 
-			% y axis Position where differentation occurs
-			wntCutoff = nicheHeight + nicheRadius + 0.5 * cryptHeight;
-
-			[stroma, nodeList, elementList, cornerNodes] = BuildStroma(obj, halfWidth, nicheRadius, nicheHeight, cryptHeight, stromalCellType);
+			[stroma, nodeList, elementList, cornerNodes] = BuildStroma(obj, halfWidth, nicheRadius, nh, cryptSideLength, stromalCellType);
 
 			obj.AddNodesToList( nodeList );
 			obj.AddElementsToList( elementList );
@@ -75,7 +79,7 @@ classdef CryptStroma < LineSimulation
 			% Make cells that will populate the crypt
 			%---------------------------------------------------
 
-			[bottomNodes, topNodes] = MakeCellNodes(obj, dSep, halfWidth, nicheRadius, nicheHeight, cryptHeight);
+			[bottomNodes, topNodes] = MakeCellNodes(obj, dSep, halfWidth, nicheRadius, nh, cryptSideLength);
 
 			obj.AddNodesToList(bottomNodes);
 			obj.AddNodesToList(topNodes);
@@ -98,7 +102,9 @@ classdef CryptStroma < LineSimulation
 
 			% Cell cycle model
 
-			ccm = WntCellCycle(p, g, wntCutoff, f, obj.dt);
+			% Must add in WntCutoff calculator to simdata
+			obj.AddSimulationData(WntCutoffFromNiche(stroma, wnt));
+			ccm = WntCellCycle(p, g, f, obj);
 
 			% Assemble the cell
 
@@ -125,7 +131,7 @@ classdef CryptStroma < LineSimulation
 
 				obj.AddElementsToList([elementBottom, elementRight, elementTop]);
 
-				ccm = WntCellCycle(p, g, wntCutoff, f, obj.dt);
+				ccm = WntCellCycle(p, g, f, obj);
 
 				c = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
 				c.cellType = epiCellType;
@@ -187,7 +193,7 @@ classdef CryptStroma < LineSimulation
 			%---------------------------------------------------
 
 			obj.AddSimulationData(SpatialState());
-			pathName = sprintf('CryptStroma/p%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%ghw%gnh%gnr%gch%gwnt%g_seed%g/',p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, halfWidth, nicheHeight, nicheRadius, cryptHeight, wntCutoff, seed);
+			pathName = sprintf('CryptStroma/p%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%ghw%gnh%gnr%gch%gwnt%g_seed%g/',p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, halfWidth, nh, nicheRadius, ch, wnt, seed);
 			obj.AddDataWriter(WriteSpatialState(100,pathName));
 
 			%---------------------------------------------------
@@ -196,11 +202,11 @@ classdef CryptStroma < LineSimulation
 
 		end
 
-		function [stroma, nodeList, elementList, cornerNodes] = BuildStroma(obj, halfWidth, nicheRadius, nicheHeight, cryptHeight, stromalCellType)
+		function [stroma, nodeList, elementList, cornerNodes] = BuildStroma(obj, halfWidth, nicheRadius, nicheHeight, cryptSideLength, stromalCellType)
 
 			% Produces a stroma with crypt shape for the crypt cells
 			% Total width is 2 x halfWidth
-			% Total height is nicheHeight + cryptHeight + nicheRadius + corner radius (re)
+			% Total height is nicheHeight + cryptSideLength + nicheRadius + corner radius (re)
 			% Crypt width is 2 x radius
 
 			% Returns the stromal cell, and a vector of nodes that mark the corners, so they
@@ -210,7 +216,7 @@ classdef CryptStroma < LineSimulation
 			% Make the nodes for the stroma
 			%---------------------------------------------------
 
-			totalHeight = nicheHeight + nicheRadius + cryptHeight;
+			totalHeight = nicheHeight + nicheRadius + cryptSideLength;
 			dx = 0.25; % The length of the edges not on the curved part
 
 			x = [];
@@ -290,13 +296,13 @@ classdef CryptStroma < LineSimulation
 
 		end
 
-		function [bottomNodes, topNodes] = MakeCellNodes(obj, dSep, halfWidth, nicheRadius, nicheHeight, cryptHeight)
+		function [bottomNodes, topNodes] = MakeCellNodes(obj, dSep, halfWidth, nicheRadius, nicheHeight, cryptSideLength)
 
 			% Reduce the prepopulated height of the epithelial cells
 			% in order to give the stroma time to settle
 			transientClearance = 2; 
 
-			totalHeight = nicheHeight + nicheRadius + cryptHeight - transientClearance;
+			totalHeight = nicheHeight + nicheRadius + cryptSideLength - transientClearance;
 			dx = 0.5; % The width of the cells in the plane of the epithelial layer
 
 			xb = [];

@@ -131,7 +131,7 @@ classdef NoAreaEffect < Analysis
 					% end
 				end
 
-				fprintf('Completed %.2f%%\n', 100*i/length(obj.parameterSet));
+				fprintf('Completed %3.2f%%\n', 100*i/length(obj.parameterSet));
 
 			end
 

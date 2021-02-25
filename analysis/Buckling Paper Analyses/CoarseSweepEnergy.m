@@ -18,12 +18,12 @@ classdef CoarseSweepEnergy < Analysis
 
 		f = 0;
 
-		b = 10;
+		b = [20,30,40];
 
 		sae = [5:10:100];
 		spe = [5:10:100];
 
-		seed = 1:20;
+		seed = 1:10;
 
 		targetTime = 500;
 
@@ -130,6 +130,8 @@ classdef CoarseSweepEnergy < Analysis
 
 					% end
 				end
+
+				fprintf('Completed %3.2f%%\n', 100*i/length(obj.parameterSet));
 
 			end
 
