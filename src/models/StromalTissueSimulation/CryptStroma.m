@@ -44,8 +44,7 @@ classdef CryptStroma < LineSimulation
 			perimeterEnergy = 10;
 			tensionEnergy = 1;
 
-			% y axis Position where differentation occurs
-			height = 2.5;
+			
 
 			% Allowable epithelial x width
 			w = 10;
@@ -57,69 +56,200 @@ classdef CryptStroma < LineSimulation
 
 			obj.AddTissueLevelKiller(k);
 
+			halfWidth = w/2;
+			nicheRadius = 1.5;
+			nicheHeight = 5;
+			cryptHeight = 5;
+
+			% y axis Position where differentation occurs
+			wntCutoff = nicheHeight + nicheRadius + 0.5 * cryptHeight;
+
+			[stroma, nodeList, elementList, cornerNodes] = BuildStroma(obj, halfWidth, nicheRadius, nicheHeight, cryptHeight, stromalCellType);
+
+			obj.AddNodesToList( nodeList );
+			obj.AddElementsToList( elementList );
+			obj.cellList = [stroma];
+
+
+			%---------------------------------------------------
+			% Make cells that will populate the crypt
+			%---------------------------------------------------
+
+			[bottomNodes, topNodes] = MakeCellNodes(obj, dSep, halfWidth, nicheRadius, nicheHeight, cryptHeight);
+
+			obj.AddNodesToList(bottomNodes);
+			obj.AddNodesToList(topNodes);
+
+
+			%---------------------------------------------------
+			% Make the first cell
+			%---------------------------------------------------
+			% Make the elements
+
+			elementRight 	= Element(bottomNodes(1), topNodes(1), obj.GetNextElementId());
+			elementLeft 	= Element(bottomNodes(2), topNodes(2), obj.GetNextElementId());
+			elementBottom 	= Element(bottomNodes(1), bottomNodes(2), obj.GetNextElementId());
+			elementTop	 	= Element(topNodes(1), topNodes(2), obj.GetNextElementId());
+			
+			% Critical for joined cells
+			elementLeft.internal = true;
+
+			obj.AddElementsToList([elementBottom, elementRight, elementTop, elementLeft]);
+
+			% Cell cycle model
+
+			ccm = WntCellCycle(p, g, wntCutoff, f, obj.dt);
+
+			% Assemble the cell
+
+			c = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
+			c.cellType = epiCellType;
+			obj.cellList(end + 1) = c;
+
+			boundaryCellMap = containers.Map({'right'}, {obj.cellList(end)});
+			%---------------------------------------------------
+			% Make the middle cells
+			%---------------------------------------------------
+
+			for i = 2:length(topNodes)-1
+				% Each time we advance to the next cell, the right most nodes and element of the previous cell
+				% become the leftmost element of the new cell
+
+				elementRight 	= elementLeft;
+				elementLeft 	= Element(bottomNodes(i+1), topNodes(i+1), obj.GetNextElementId());
+				elementBottom 	= Element(bottomNodes(i), bottomNodes(i+1), obj.GetNextElementId());
+				elementTop	 	= Element(topNodes(i), topNodes(i+1), obj.GetNextElementId());
+
+				% Critical for joined cells
+				elementLeft.internal = true;
+
+				obj.AddElementsToList([elementBottom, elementRight, elementTop]);
+
+				ccm = WntCellCycle(p, g, wntCutoff, f, obj.dt);
+
+				c = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
+				c.cellType = epiCellType;
+				obj.cellList(end + 1) = c;
+
+			end
+
+			boundaryCellMap('left') = obj.cellList(end);
+
+			bc = obj.simData('boundaryCells');
+			bc.SetData(boundaryCellMap);
+			%---------------------------------------------------
+			% Add in the forces
+			%---------------------------------------------------
+
+			% Cell growth force
+			obj.AddCellBasedForce(PolygonCellGrowthForce(areaEnergy, perimeterEnergy, tensionEnergy));
+
+			% A special distinct force for the stroma
+			obj.AddCellBasedForce(StromaStructuralForce(stroma, sae, spe, 0));
+
+			% Node-Element interaction force - requires a SpacePartition
+			% Handles different interaction strengths between different cell types
+			cellTypes = [epiCellType,stromalCellType];
+			att = [0,b;
+				   b,0]; % No attraction between epithelial cells
+			obj.AddNeighbourhoodBasedForce(CellTypeInteractionForce(att, repmat(b,2), repmat(dAsym,2), repmat(dSep,2), repmat(dLim,2), cellTypes, obj.dt, true));
+			
+			%---------------------------------------------------
+			% Add space partition
+			%---------------------------------------------------
+			% In this simulation we are fixing the size of the boxes
+
+			obj.boxes = SpacePartition(0.5, 0.5, obj);
+
+			%---------------------------------------------------
+			% Add the data we'd like to store
+			%---------------------------------------------------
+
+			% obj.AddDataStore(StoreWiggleRatio(10));
+
+			%---------------------------------------------------
+			% Add the modfier to keep the stromal corner cells
+			% locked in place
+			%---------------------------------------------------
+			
+			% nodeList comes from building the stroma
+			obj.AddSimulationModifier(   PinNodes(  cornerNodes  )   );
+
+			% %---------------------------------------------------
+			% % Add the modfier to keep the boundary cells at the
+			% % same vertical position
+			% %---------------------------------------------------
+			
+			% obj.AddSimulationModifier(ShiftBoundaryCells());
+
+			%---------------------------------------------------
+			% Add the data writers
+			%---------------------------------------------------
+
+			obj.AddSimulationData(SpatialState());
+			pathName = sprintf('CryptStroma/p%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%ghw%gnh%gnr%gch%gwnt%g_seed%g/',p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, halfWidth, nicheHeight, nicheRadius, cryptHeight, wntCutoff, seed);
+			obj.AddDataWriter(WriteSpatialState(100,pathName));
+
+			%---------------------------------------------------
+			% All done. Ready to roll
+			%---------------------------------------------------
+
+		end
+
+		function [stroma, nodeList, elementList, cornerNodes] = BuildStroma(obj, halfWidth, nicheRadius, nicheHeight, cryptHeight, stromalCellType)
+
+			% Produces a stroma with crypt shape for the crypt cells
+			% Total width is 2 x halfWidth
+			% Total height is nicheHeight + cryptHeight + nicheRadius + corner radius (re)
+			% Crypt width is 2 x radius
+
+			% Returns the stromal cell, and a vector of nodes that mark the corners, so they
+			% can be pinned in place
+
 			%---------------------------------------------------
 			% Make the nodes for the stroma
 			%---------------------------------------------------
 
-			rb = 1.5; % radius of bottom/niche
-			re = 0.5; % radius of the edge
+			totalHeight = nicheHeight + nicheRadius + cryptHeight;
+			dx = 0.25; % The length of the edges not on the curved part
 
-			h = 5; % height of the crypt from cb to ce
-			wd = 10; % width from edge to edge of sim domain
-			% if w < 2*(rb+re)
-			% 	error('Too narrow, increase width');
-			% end
+			x = [];
+			y = [];
 
-			cb = [0,0];
-			cel = cb - [(rb+re), 0] + [0,h];
-			cer = cb + [(rb+re), 0] + [0,h];
+			% Go along the top
+			for X = halfWidth:-dx:nicheRadius
 
-			d = 10; % divisions in a quater of a circle
+				x(end + 1) = X;
+				y(end + 1) = totalHeight;
 
-			pos = []; % a vector of all the positions
-
-			% We start from the right and work our way to the left to make an
-			% anticlockwise loop.
-
-			x = linspace(wd/2,(rb+re),10);
-
-			pos = [x',(h + re)*ones(size(x'))];
-
-			% First curve
-			% Theta goes from pi/2 to pi in d steps
-			for i = 1:d-1
-			    theta = pi/2 + i * pi / (2*d);
-			    pos(end+1,:) = cer + [re*cos(theta), re*sin(theta)];
 			end
 
-			y = linspace(h,0,20);
+			% Then down the side
 
-			temp = [rb * ones(size(y')), y'];
+			for Y = (totalHeight-dx):-dx:(nicheHeight+nicheRadius)
 
-			pos = [pos;temp];
+				x(end + 1) = nicheRadius;
+				y(end + 1) = Y;
 
-
-			% Second curve
-			% Theta goes from 0 to -pi/2 in d steps
-			for i = 1:d
-			    theta = 0 - i * pi / (2*d);
-			    pos(end+1,:) = cb + [rb*cos(theta), rb*sin(theta)];
 			end
 
+			% Then around the curve
+			n = 10;
+			for theta = -pi/(2*n):-pi/(2*n):-pi/2
 
-			% The line is symetrical so just duplicate and reflect the x values
-			% except for the very bottom
+				x(end + 1) = nicheRadius * cos(theta);
+				y(end + 1) = (nicheHeight + nicheRadius) + nicheRadius * sin(theta);
 
-			rpos = flipud(pos);
-			rpos(:,1) = -rpos(:,1);
-			rpos(1,:) = [];
+			end
 
-			pos = [pos;rpos];
+			% Make the vector of positions
+			% the indices (1:end-1) stop it from repeating the bottom centre node
+			pos = [x',y';-flipud(x(1:end-1)'),flipud(y(1:end-1)')];
 
-			stromaBottom = -3;
+			% Add in the missing bottom corner positions
 
-			pos(end+1,:) = [pos(end,1), stromaBottom];
-			pos(end+1,:) = [pos(1,1), stromaBottom];
+			pos = [pos;-halfWidth,0;halfWidth,0];
+
 
 			%---------------------------------------------------
 			% Make the cell that acts as the stroma
@@ -156,150 +286,84 @@ classdef CryptStroma < LineSimulation
 
 			stroma.cellData('targetPerimeter') = TargetPerimeterStroma(perim);
 
-			obj.AddNodesToList( nodeList );
-			obj.AddElementsToList( elementList );
-			obj.cellList = [stroma];
+			cornerNodes = [nodeList(1), nodeList(end-2:end)];
 
+		end
 
-			%---------------------------------------------------
-			% Make cells that will populate the crypt
-			%---------------------------------------------------
+		function [bottomNodes, topNodes] = MakeCellNodes(obj, dSep, halfWidth, nicheRadius, nicheHeight, cryptHeight)
 
-			nCells = 10;
-			r = 0.5 / sin(2*pi/nCells) - 0.5;
+			% Reduce the prepopulated height of the epithelial cells
+			% in order to give the stroma time to settle
+			transientClearance = 2; 
+
+			totalHeight = nicheHeight + nicheRadius + cryptHeight - transientClearance;
+			dx = 0.5; % The width of the cells in the plane of the epithelial layer
+
+			xb = [];
+			yb = [];
+
+			xt = [];
+			yt = [];
+
+			% We want to minimise the difference between the top and bottom
+			% element lengths. The internal element lengths will be 1
+			% Cells will be spaced evenly, covering 2pi/n rads
+			% WE also keep the cell area at 0.5 since we are starting in Pause
+
+			% Under these conditions, the radius r of the bottom nodes is given
+			% by:
+
+			% r = 0.5 / sin(2*pi/n) - 0.5;
+
+			% Since we know the radius of the bottom nodes is nichRadius - dSep
+			% this gives us a set number of cells
+
+			r = nicheRadius - dSep;
+
+			n = ceil( 2*pi / (4 * asin(1/(2*r-1))) );
+
+			for i = 0:n-1
+
+				theta = -pi/2 + i*pi/(2*n);
+				xb(end + 1) = r * cos(theta);
+				yb(end + 1) = nicheHeight + nicheRadius + r * sin(theta);
+
+				xt(end + 1) = (r - 1) * cos(theta);
+				yt(end + 1) = nicheHeight + nicheRadius + (r - 1) * sin(theta);
+
+				
+
+			end
+
+			% Then up the side
+
+			for Y = (nicheHeight+nicheRadius):dx:totalHeight
+
+				xb(end + 1) = r;
+				yb(end + 1) = Y;
+
+				xt(end + 1) = r-1;
+				yt(end + 1) = Y;
+
+			end
+			
+
+			% Make the vector of positions
+			% the indices (2:end) stop it from repeating the bottom centre node
+			xb = [flipud(xb(2:end)');-xb'];
+			xt = [flipud(xt(2:end)');-xt'];
+
+			yb = [flipud(yb(2:end)');yb'];
+			yt = [flipud(yt(2:end)');yt'];
 
 			topNodes = Node.empty();
 			bottomNodes = Node.empty();
+			for i = 1:length(xt)
 
-			for n = 0:floor(nCells/2)
-
-				theta = -2*pi*n/nCells;
-				xt = r * cos(theta);
-				yt = r * sin(theta);
-
-				xb = (r + 1) * cos(theta);
-				yb = (r + 1) * sin(theta);
-
-				bottomNodes(end + 1) = Node(xb, yb, obj.GetNextNodeId());
-				topNodes(end + 1) = Node(xt, yt, obj.GetNextNodeId());
+				bottomNodes(i) = Node(xb(i), yb(i), obj.GetNextNodeId());
+				topNodes(i) = Node(xt(i), yt(i), obj.GetNextNodeId());
 
 			end
-
-			obj.AddNodesToList(bottomNodes);
-			obj.AddNodesToList(topNodes);
-
-
-			%---------------------------------------------------
-			% Make the first cell
-			%---------------------------------------------------
-			% Make the elements
-
-			elementRight 	= Element(bottomNodes(1), topNodes(1), obj.GetNextElementId());
-			elementLeft 	= Element(bottomNodes(2), topNodes(2), obj.GetNextElementId());
-			elementBottom 	= Element(bottomNodes(1), bottomNodes(2), obj.GetNextElementId());
-			elementTop	 	= Element(topNodes(1), topNodes(2), obj.GetNextElementId());
-			
-			% Critical for joined cells
-			elementLeft.internal = true;
-
-			obj.AddElementsToList([elementBottom, elementRight, elementTop, elementLeft]);
-
-			% Cell cycle model
-
-			ccm = WntCellCycle(p, g, height, f, obj.dt);
-
-			% Assemble the cell
-
-			c = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
-			c.cellType = epiCellType;
-			obj.cellList(end + 1) = c;
-
-			boundaryCellMap = containers.Map({'right'}, {obj.cellList(end)});
-			%---------------------------------------------------
-			% Make the middle cells
-			%---------------------------------------------------
-
-			for i = 2:length(topNodes)-1
-				% Each time we advance to the next cell, the right most nodes and element of the previous cell
-				% become the leftmost element of the new cell
-
-				elementRight 	= elementLeft;
-				elementLeft 	= Element(bottomNodes(i+1), topNodes(i+1), obj.GetNextElementId());
-				elementBottom 	= Element(bottomNodes(i), bottomNodes(i+1), obj.GetNextElementId());
-				elementTop	 	= Element(topNodes(i), topNodes(i+1), obj.GetNextElementId());
-
-				% Critical for joined cells
-				elementLeft.internal = true;
-
-				obj.AddElementsToList([elementBottom, elementRight, elementTop]);
-
-				ccm = WntCellCycle(p, g, height, f, obj.dt);
-
-				c = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
-				c.cellType = epiCellType;
-				obj.cellList(end + 1) = c;
-
-			end
-
-			boundaryCellMap('left') = obj.cellList(end);
-
-			bc = obj.simData('boundaryCells');
-			bc.SetData(boundaryCellMap);
-			%---------------------------------------------------
-			% Add in the forces
-			%---------------------------------------------------
-
-			% Cell growth force
-			obj.AddCellBasedForce(PolygonCellGrowthForce(areaEnergy, perimeterEnergy, tensionEnergy));
-
-			% A special distinct force for the stroma
-			obj.AddCellBasedForce(StromaStructuralForce(stroma, sae, spe, 0));
-
-			% Node-Element interaction force - requires a SpacePartition
-			% Handles different interaction strengths between different cell types
-			cellTypes = [epiCellType,stromalCellType];
-			att = [0,b;b,0]; % No attraction between epithelial cells
-			obj.AddNeighbourhoodBasedForce(CellTypeInteractionForce(att, repmat(b,2), repmat(dAsym,2), repmat(dSep,2), repmat(dLim,2), cellTypes, obj.dt, true));
-			
-			%---------------------------------------------------
-			% Add space partition
-			%---------------------------------------------------
-			% In this simulation we are fixing the size of the boxes
-
-			obj.boxes = SpacePartition(0.5, 0.5, obj);
-
-			%---------------------------------------------------
-			% Add the data we'd like to store
-			%---------------------------------------------------
-
-			% obj.AddDataStore(StoreWiggleRatio(10));
-
-			%---------------------------------------------------
-			% Add the modfier to keep the stromal corner cells
-			% locked in place
-			%---------------------------------------------------
-			
-			% nodeList comes from building the stroma
-			obj.AddSimulationModifier(   PinNodes(  [nodeList(1), nodeList(end-2:end)]  )   );
-
-			% %---------------------------------------------------
-			% % Add the modfier to keep the boundary cells at the
-			% % same vertical position
-			% %---------------------------------------------------
-			
-			% obj.AddSimulationModifier(ShiftBoundaryCells());
-
-			%---------------------------------------------------
-			% Add the data writers
-			%---------------------------------------------------
-
-			obj.AddSimulationData(SpatialState());
-			pathName = sprintf('CryptStroma/p%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%g_seed%g/',p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy,seed);
-			obj.AddDataWriter(WriteSpatialState(100,pathName));
-
-			%---------------------------------------------------
-			% All done. Ready to roll
-			%---------------------------------------------------
 
 		end
 

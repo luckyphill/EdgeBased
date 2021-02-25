@@ -1,0 +1,1 @@
+sbatch --array=0-3200 --time=12:00:00 ../generalSbatch7seed.sh ManageLayerOnStroma CoarseSweepEnergy.txt 
