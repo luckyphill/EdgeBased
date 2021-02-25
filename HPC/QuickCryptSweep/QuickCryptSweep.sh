@@ -30,7 +30,7 @@ done < QuickCryptSweep.txt
 
 if [ $found = 1 ]; then
 	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath(pwd)); obj = CryptStroma($a, $b, $c, $d, $e, $f, $g, $h, $i, 1); obj.RunToTime(300); quit()"
-	matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath(pwd)); obj = CryptStroma($a, $b, $c, $d, $e, $f, $g, $h, $i, 1); obj.RunToTime(300); quit()"
+	matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath(pwd)); obj = CryptStroma($a, $b, $c, $d, $e, $f, $g, $h, $i, 1); obj.RunToTime(300); v = Visualiser(c); v.ProduceMovie; quit()"
 else 
   echo "SLURM_ARRAY_TASK_ID $SLURM_ARRAY_TASK_ID is outside range of input file $paramFile" 
 fi
