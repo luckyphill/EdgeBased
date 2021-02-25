@@ -7,8 +7,6 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=phillip.j.brown@adelaide.edu.au
 
-paramFile=$1
-
 module load arch/haswell
 module load matlab
 
@@ -28,7 +26,7 @@ do
 		break 
 	fi 
 	i=$((i + 1)) 
-done < $paramFile
+done < QuickCryptSweep.txt
 
 if [ $found = 1 ]; then
 	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath(pwd)); obj = CryptStroma($a, $b, $c, $d, $e, $f, $g, $h, $i, 1); obj.RunToTime(300); quit()"
