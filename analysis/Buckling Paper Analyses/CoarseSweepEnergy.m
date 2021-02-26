@@ -152,9 +152,11 @@ classdef CoarseSweepEnergy < Analysis
 				
 				h = figure;
 
-				params = obj.parameterSet( :, obj.parameterSet(:,4) == b );
+				params = obj.parameterSet( obj.parameterSet(:,4) == b, : );
+				result = buckleOutcome(obj.parameterSet(:,4) == b, : );
+				result = sum(result,2)/length(obj.seed);
 
-				scatter(obj.parameterSet(:,7), obj.parameterSet(:,6), 100, sum(buckleOutcome,2)/length(obj.seed),'filled');
+				scatter(params(:,7), params(:,6), 100, result,'filled');
 				ylabel('Area energy parameter','Interpreter', 'latex', 'FontSize', 15);xlabel('Perimeter energy parameter','Interpreter', 'latex', 'FontSize', 15);
 				title(sprintf('Proportion buckled, p=%g, g=%g, b=%g',obj.p,obj.g, b),'Interpreter', 'latex', 'FontSize', 22);
 				ylim([min(obj.sae)-1, max(obj.sae)+1]);xlim([min(obj.spe)-1, max(obj.spe)+1]);
