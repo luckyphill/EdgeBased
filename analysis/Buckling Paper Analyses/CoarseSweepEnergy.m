@@ -144,24 +144,31 @@ classdef CoarseSweepEnergy < Analysis
 
 		function PlotData(obj)
 
+
 			buckleOutcome = obj.result{1};
 			buckleTime = obj.result{2};
 
-			h = figure;
+			for b = obj.b
+				
+				h = figure;
 
-			scatter(obj.parameterSet(:,7), obj.parameterSet(:,6), 100, sum(buckleOutcome,2)/length(obj.seed),'filled');
-			ylabel('Area energy parameter','Interpreter', 'latex', 'FontSize', 15);xlabel('Perimeter energy parameter','Interpreter', 'latex', 'FontSize', 15);
-			title(sprintf('Proportion buckled, p=%g, g=%g',obj.p,obj.g),'Interpreter', 'latex', 'FontSize', 22);
-			ylim([min(obj.sae)-1, max(obj.sae)+1]);xlim([min(obj.spe)-1, max(obj.spe)+1]);
-			colorbar; caxis([0 1]);
-			colormap jet;
-			ax = gca;
-			c = ax.Color;
-			ax.Color = 'black';
-			set(h, 'InvertHardcopy', 'off')
-			set(h,'color','w');
+				params = obj.parameterSet( :, obj.parameterSet(:,4) == b );
 
-			SavePlot(obj, h, sprintf('BodyParams'));
+				scatter(obj.parameterSet(:,7), obj.parameterSet(:,6), 100, sum(buckleOutcome,2)/length(obj.seed),'filled');
+				ylabel('Area energy parameter','Interpreter', 'latex', 'FontSize', 15);xlabel('Perimeter energy parameter','Interpreter', 'latex', 'FontSize', 15);
+				title(sprintf('Proportion buckled, p=%g, g=%g, b=%g',obj.p,obj.g, b),'Interpreter', 'latex', 'FontSize', 22);
+				ylim([min(obj.sae)-1, max(obj.sae)+1]);xlim([min(obj.spe)-1, max(obj.spe)+1]);
+				colorbar; caxis([0 1]);
+				colormap jet;
+				ax = gca;
+				c = ax.Color;
+				ax.Color = 'black';
+				set(h, 'InvertHardcopy', 'off')
+				set(h,'color','w');
+
+				SavePlot(obj, h, sprintf('CoarseSweep_b%g',b));
+
+			end
 
 
 

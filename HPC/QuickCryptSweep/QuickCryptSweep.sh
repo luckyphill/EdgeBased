@@ -19,10 +19,10 @@ echo "array_job_index: $SLURM_ARRAY_TASK_ID"
 i=1 
 found=0 
 
-while IFS=, read a b c d e f g h i
+while IFS=, read a b c d e f g h j
 do 
 	if [ $i = $SLURM_ARRAY_TASK_ID ]; then
-		echo "Running with [$a, $b, $c, $d, $e, $f, $g, $h, $i]"
+		echo "Running with [$a, $b, $c, $d, $e, $f, $g, $h, $j]"
 		found=1 
 
 		break 
@@ -31,8 +31,8 @@ do
 done < QuickCryptSweep.txt
 
 if [ $found = 1 ]; then
-	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath(pwd)); obj = CryptStroma($a, $b, $c, $d, $e, $f, $g, $h, $i, 1); obj.RunToTime(300); quit()"
-	matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath(pwd)); obj = CryptStroma($a, $b, $c, $d, $e, $f, $g, $h, $i, 1); obj.RunToTime(300); v = Visualiser(obj); v.ProduceMovie; quit()"
+	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath(pwd)); obj = CryptStroma($a, $b, $c, $d, $e, $f, $g, $h, $j, 1); obj.RunToTime(300); quit()"
+	matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath(pwd)); obj = CryptStroma($a, $b, $c, $d, $e, $f, $g, $h, $j, 1); obj.RunToTime(300); v = Visualiser(obj); v.ProduceMovie; quit()"
 else 
   echo "SLURM_ARRAY_TASK_ID $SLURM_ARRAY_TASK_ID is outside range of input file $paramFile" 
 fi
