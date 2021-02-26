@@ -3,6 +3,8 @@
 #SBATCH -N 1 
 #SBATCH -n 1 
 #SBATCH --mem=4GB
+#SBATCH --array=1-14
+#SBATCH --time=24:00:00
 # NOTIFICATIONS
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=phillip.j.brown@adelaide.edu.au
@@ -20,7 +22,7 @@ found=0
 while IFS=, read a b c d e f g h i
 do 
 	if [ $i = $SLURM_ARRAY_TASK_ID ]; then
-		echo "Running $simName with [$a, $b, $c, $d, $e, $f, $g, $h, $i]"
+		echo "Running with [$a, $b, $c, $d, $e, $f, $g, $h, $i]"
 		found=1 
 
 		break 
@@ -30,7 +32,7 @@ done < QuickCryptSweep.txt
 
 if [ $found = 1 ]; then
 	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath(pwd)); obj = CryptStroma($a, $b, $c, $d, $e, $f, $g, $h, $i, 1); obj.RunToTime(300); quit()"
-	matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath(pwd)); obj = CryptStroma($a, $b, $c, $d, $e, $f, $g, $h, $i, 1); obj.RunToTime(300); v = Visualiser(c); v.ProduceMovie; quit()"
+	matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath(pwd)); obj = CryptStroma($a, $b, $c, $d, $e, $f, $g, $h, $i, 1); obj.RunToTime(300); v = Visualiser(obj); v.ProduceMovie; quit()"
 else 
   echo "SLURM_ARRAY_TASK_ID $SLURM_ARRAY_TASK_ID is outside range of input file $paramFile" 
 fi
