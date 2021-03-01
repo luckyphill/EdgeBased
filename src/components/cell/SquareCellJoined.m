@@ -187,6 +187,9 @@ classdef SquareCellJoined < AbstractCell
 			obj.sisterCell = newCell;
 			% ...and ancestorId
 			newCell.ancestorId = obj.id;
+
+			% And make sure the new cell is of the same type
+			newCell.cellType = obj.cellType;
 		
 		end
 
