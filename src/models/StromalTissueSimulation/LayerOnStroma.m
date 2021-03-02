@@ -6,7 +6,7 @@ classdef LayerOnStroma < LineSimulation
 
 	properties
 
-		dt = 0.005
+		dt = 0.002
 		t = 0
 		eta = 1
 

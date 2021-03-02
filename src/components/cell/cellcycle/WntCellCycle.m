@@ -26,6 +26,7 @@ classdef WntCellCycle < AbstractCellCycleModel
 		growthColour
 		inhibitedColour
 		differentiatedColour
+		mutatedColour
 
 		tissue % A pointer to the whole simulation
 
@@ -51,6 +52,7 @@ classdef WntCellCycle < AbstractCellCycleModel
 			obj.growthColour = obj.colourSet.GetNumber('GROW');
 			obj.inhibitedColour = obj.colourSet.GetNumber('STOPPED');
 			obj.differentiatedColour = obj.colourSet.GetNumber('DIFFERENTIATED');
+			obj.mutatedColour  = obj.colourSet.GetNumber('DYING');
 
 		end
 
@@ -61,9 +63,9 @@ classdef WntCellCycle < AbstractCellCycleModel
 
 			obj.age = obj.age + dt;
 
+			c = obj.containingCell;
+
 			if ~obj.differentiated
-				
-				c = obj.containingCell;
 
 				if obj.age < obj.pausePhaseDuration
 					obj.colour = obj.pauseColour;
@@ -94,6 +96,11 @@ classdef WntCellCycle < AbstractCellCycleModel
 
 			end
 
+			if c.cellType == 2
+				% Cell is a mutant
+				obj.colour = obj.mutatedColour;
+			end
+
 		end
 
 		function newCCM = Duplicate(obj)
@@ -101,6 +108,11 @@ classdef WntCellCycle < AbstractCellCycleModel
 			newCCM = WntCellCycle(obj.meanPausePhaseDuration, obj.meanGrowingPhaseDuration, obj.growthTriggerFraction, obj.tissue);
 			newCCM.SetAge(0);
 			newCCM.colour = obj.colourSet.GetNumber('PAUSE');
+
+			if obj.containingCell.cellType == 2
+				% Cell is a mutant
+				newCCM.colour = obj.mutatedColour;
+			end
 
 		end
 
