@@ -263,10 +263,14 @@ classdef Visualiser < matlab.mixin.SetGet
 			
 			xyrange = [];
 			indices = [];
+			videoFormat = 'MPEG-4';
 			if ~isempty(varargin)
 				indices = varargin{1};
 				if length(varargin) > 1
 					xyrange = varargin{2};
+					if length(varargin) > 2
+						videoFormat = varargin{3};
+					end
 				end
 			end
 
@@ -350,7 +354,7 @@ classdef Visualiser < matlab.mixin.SetGet
 				fileName = sprintf('%s_Full',fileName);
 			end
 
-			writerObj = VideoWriter(fileName,'MPEG-4');
+			writerObj = VideoWriter(fileName,videoFormat);
 			writerObj.FrameRate = 10;
 
 			% open the video writer
@@ -514,10 +518,14 @@ classdef Visualiser < matlab.mixin.SetGet
 
 			xyrange = [];
 			indices = [];
+			videoFormat = 'MPEG-4';
 			if ~isempty(varargin)
 				indices = varargin{1};
 				if length(varargin) > 1
 					xyrange = varargin{2};
+					if length(varargin) > 2
+						videoFormat = varargin{3};
+					end
 				end
 			end
 
@@ -603,7 +611,7 @@ classdef Visualiser < matlab.mixin.SetGet
 				fileName = sprintf('%s_Full',fileName);
 			end
 
-			writerObj = VideoWriter(fileName,'MPEG-4');
+			writerObj = VideoWriter(fileName,videoFormat);
 			writerObj.FrameRate = 10;
 
 			% open the video writer
@@ -628,10 +636,14 @@ classdef Visualiser < matlab.mixin.SetGet
 
 			xyrange = [];
 			indices = [];
+			videoFormat = 'MPEG-4';
 			if ~isempty(varargin)
 				indices = varargin{1};
 				if length(varargin) > 1
 					xyrange = varargin{2};
+					if length(varargin) > 2
+						videoFormat = varargin{3};
+					end
 				end
 			end
 
@@ -725,7 +737,7 @@ classdef Visualiser < matlab.mixin.SetGet
 				fileName = sprintf('%s_Full',fileName);
 			end
 
-			writerObj = VideoWriter(fileName,'MPEG-4');
+			writerObj = VideoWriter(fileName,videoFormat);
 			writerObj.FrameRate = 10;
 
 			% open the video writer

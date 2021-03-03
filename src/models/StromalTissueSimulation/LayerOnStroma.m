@@ -215,7 +215,7 @@ classdef LayerOnStroma < LineSimulation
 
 			obj.AddSimulationData(SpatialState());
 			obj.pathName = sprintf('LayerOnStroma/n%gp%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%g_seed%g/',N,p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, seed);
-			obj.AddDataWriter(WriteSpatialState(20,obj.pathName));
+			obj.AddDataWriter(WriteSpatialState(100,obj.pathName));
 
 			%---------------------------------------------------
 			% All done. Ready to roll
