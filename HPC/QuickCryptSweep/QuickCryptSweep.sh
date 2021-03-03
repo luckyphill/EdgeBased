@@ -34,5 +34,5 @@ if [ $found = 1 ]; then
 	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath(pwd)); obj = CryptStroma($a, $b, $c, $d, $e, $f, $g, $h, $j, 1); obj.RunToTime(300); quit()"
 	matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath(pwd)); obj = CryptStroma($a, $b, $c, $d, $e, $f, $g, $h, $j, 1); obj.RunToTime(300); v = Visualiser(obj); v.ProduceMovie([],[],'Motion JPEG AVI'); quit()"
 else 
-  echo "SLURM_ARRAY_TASK_ID $SLURM_ARRAY_TASK_ID is outside range of input file $paramFile" 
+  echo "SLURM_ARRAY_TASK_ID $SLURM_ARRAY_TASK_ID is outside range of input file" 
 fi
