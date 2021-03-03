@@ -28,7 +28,7 @@ do
 		break 
 	fi 
 	i=$((i + 1)) 
-done < QuickLayerCheck.txt
+done < QuickCryptSweep.txt
 
 if [ $found = 1 ]; then
 	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath(pwd)); obj = CryptStroma($a, $b, $c, $d, $e, $f, $g, $h, $j, 1); obj.RunToTime(300); quit()"
