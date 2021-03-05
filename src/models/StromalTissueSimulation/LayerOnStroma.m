@@ -223,8 +223,8 @@ classdef LayerOnStroma < LineSimulation
 			obj.pathName = sprintf('LayerOnStroma/n%gp%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%gcp%gca%g_seed%g/',N,p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, cornerParameter, cornerAngle, seed);
 			obj.AddSimulationData(SpatialState());
 			obj.AddDataWriter(WriteSpatialState(100,obj.pathName));
-			obj.AddSimulationData(TrackCellGeometry(ceil(N/2)));
-			obj.AddDataWriter(WriteCellGeometry(1,obj.pathName));
+			% obj.AddSimulationData(TrackCellGeometry(ceil(N/2)));
+			% obj.AddDataWriter(WriteCellGeometry(1,obj.pathName));
 
 			%---------------------------------------------------
 			% All done. Ready to roll
