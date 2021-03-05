@@ -46,8 +46,12 @@ classdef LayerOnStroma < LineSimulation
 
 			% The energy densities for the cell growth force
 			areaEnergy = 20;
-			perimeterEnergy = 20;
-			tensionEnergy = 0;
+			perimeterEnergy = 10;
+			tensionEnergy = 0;\
+			
+			% Corner force parameter for keeping the cells square
+			cornerParameter = 0.5;
+			cornerAngle = 1.57; % pi/2 truncated for the sake of teh folder name below
 
 
 			% This simulation only allows cells to exist in a limited x domain
@@ -186,6 +190,9 @@ classdef LayerOnStroma < LineSimulation
 			% A special distinct force for the stroma
 			obj.AddCellBasedForce(StromaStructuralForce(stroma, sae, spe, 0));
 
+			% A force to keep the cell corners square - hopefully to stop node jumping after division
+			obj.AddCellBasedForce(CornerForceCouple(cornerParameter,cornerAngle));
+
 			% Node-Element interaction force - requires a SpacePartition
 			% Handles different interaction strengths between different cell types
 			cellTypes = [epiCellType,stromalCellType];
@@ -213,11 +220,11 @@ classdef LayerOnStroma < LineSimulation
 			% Add the data writers
 			%---------------------------------------------------
 
-			obj.pathName = sprintf('LayerOnStroma/n%gp%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%g_seed%g/',N,p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, seed);
+			obj.pathName = sprintf('LayerOnStroma/n%gp%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%gcp%gca%g_seed%g/',N,p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, cornerParameter, cornerAngle, seed);
 			obj.AddSimulationData(SpatialState());
 			obj.AddDataWriter(WriteSpatialState(100,obj.pathName));
-			% obj.AddSimulationData(TrackCellGeometry(ceil(N/2)));
-			% obj.AddDataWriter(WriteCellGeometry(1,obj.pathName));
+			obj.AddSimulationData(TrackCellGeometry(ceil(N/2)));
+			obj.AddDataWriter(WriteCellGeometry(1,obj.pathName));
 
 			%---------------------------------------------------
 			% All done. Ready to roll
