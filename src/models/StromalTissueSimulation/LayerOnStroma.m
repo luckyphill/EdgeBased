@@ -47,7 +47,7 @@ classdef LayerOnStroma < LineSimulation
 			% The energy densities for the cell growth force
 			areaEnergy = 20;
 			perimeterEnergy = 10;
-			tensionEnergy = 0;\
+			tensionEnergy = 0;
 			
 			% Corner force parameter for keeping the cells square
 			cornerParameter = 0.5;
