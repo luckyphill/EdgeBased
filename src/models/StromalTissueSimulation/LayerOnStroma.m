@@ -48,6 +48,7 @@ classdef LayerOnStroma < LineSimulation
 			areaEnergy = 20;
 			perimeterEnergy = 10;
 			tensionEnergy = 0;
+			% Meaningless change so I have something to commit in git
 			
 			% Corner force parameter for keeping the cells square
 			cornerParameter = 0.5;
