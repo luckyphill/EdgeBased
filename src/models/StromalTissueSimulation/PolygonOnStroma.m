@@ -40,7 +40,7 @@ classdef PolygonOnStroma < LineSimulation
 			% f = 0.9;
 
 			% The asymptote, separation, and limit distances for the interaction force
-			dAsym = 0;
+			dAsym = -0.1;
 			dSep = 0.1;
 			dLim = 0.2;
 
@@ -60,9 +60,13 @@ classdef PolygonOnStroma < LineSimulation
 			leftBoundary = -0.25;
 			rightBoundary = 0.5 * N + 0.25;
 
-			% k = BoundaryCellKiller(leftBoundary, rightBoundary);
+			kl = PlaneCellKiller([leftBoundary,0], [-1,0]);
+			kr = PlaneCellKiller([rightBoundary,0], [1,0]);
+			ka = PlaneCellKiller([0,0.7], [0,1]); % Dumb Anoikis killer
 
-			% obj.AddTissueLevelKiller(k);
+			obj.AddTissueLevelKiller(kl);
+			obj.AddTissueLevelKiller(kr);
+			obj.AddTissueLevelKiller(ka);
 
 			%---------------------------------------------------
 			% Make all the cells
@@ -74,29 +78,37 @@ classdef PolygonOnStroma < LineSimulation
 
 			% Make the nodes
 
-			nodeTopLeft 	= Node(5,1,obj.GetNextNodeId());
-			nodeBottomLeft 	= Node(5,0,obj.GetNextNodeId());
-			nodeTopRight 	= Node(5.5,1,obj.GetNextNodeId());
-			nodeBottomRight	= Node(5.5,0,obj.GetNextNodeId());
+			% nodeTopLeft 	= Node(5,1,obj.GetNextNodeId());
+			% nodeBottomLeft 	= Node(5,0,obj.GetNextNodeId());
+			% nodeTopRight 	= Node(5.5,1,obj.GetNextNodeId());
+			% nodeBottomRight	= Node(5.5,0,obj.GetNextNodeId());
 
-			obj.AddNodesToList([nodeBottomLeft, nodeBottomRight, nodeTopRight, nodeTopLeft]);
+			% obj.AddNodesToList([nodeBottomLeft, nodeBottomRight, nodeTopRight, nodeTopLeft]);
 
-			% Make the elements
+			% % Make the elements
 
-			elementBottom 	= Element(nodeBottomLeft, nodeBottomRight, obj.GetNextElementId());
-			elementRight 	= Element(nodeBottomRight, nodeTopRight, obj.GetNextElementId());
-			elementTop	 	= Element(nodeTopLeft, nodeTopRight, obj.GetNextElementId());
-			elementLeft 	= Element(nodeBottomLeft, nodeTopLeft, obj.GetNextElementId());
+			% elementBottom 	= Element(nodeBottomLeft, nodeBottomRight, obj.GetNextElementId());
+			% elementRight 	= Element(nodeBottomRight, nodeTopRight, obj.GetNextElementId());
+			% elementTop	 	= Element(nodeTopLeft, nodeTopRight, obj.GetNextElementId());
+			% elementLeft 	= Element(nodeBottomLeft, nodeTopLeft, obj.GetNextElementId());
 
-			obj.AddElementsToList([elementBottom, elementRight, elementTop, elementLeft]);
+			% obj.AddElementsToList([elementBottom, elementRight, elementTop, elementLeft]);
 
-			% Cell cycle model
+			% % Cell cycle model
 
+			% ccm = GrowthContactInhibition(p, g, f, obj.dt);
+
+			% % Assemble the cell
+
+			% c = SquareCellFree(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
+			
 			ccm = GrowthContactInhibition(p, g, f, obj.dt);
+				
+			c = MakeCellAtCentre(obj, 10, 5, 0.5, ccm);
+			c.splitNodeFunction = BasalNode(); % Tell the cell how it is allowed to divide
 
-			% Assemble the cell
-
-			c = SquareCellFree(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
+			obj.nodeList = [obj.nodeList, c.nodeList];
+			obj.elementList = [obj.elementList, c.elementList];
 			c.cellType = epiCellType;
 			obj.cellList = c;
 
@@ -191,7 +203,10 @@ classdef PolygonOnStroma < LineSimulation
 			cellTypes = [epiCellType,stromalCellType];
 			att = [b,b;
 				   b,0]; % No attraction between epithelial cells or between stromal cells
-			obj.AddNeighbourhoodBasedForce(CellTypeInteractionForce(att, repmat(b,2), repmat(dAsym,2), repmat(dSep,2), repmat(dLim,2), cellTypes, obj.dt, true));
+			rep = repmat(b,2);
+			dA = [dAsym,0;
+					 0,dAsym];
+			obj.AddNeighbourhoodBasedForce(CellTypeInteractionForce(att, rep, dA, repmat(dSep,2), repmat(dLim,2), cellTypes, obj.dt, true));
 			
 			%---------------------------------------------------
 			% Add space partition
@@ -226,6 +241,22 @@ classdef PolygonOnStroma < LineSimulation
 
 			% A little hack to make the parameter sweeps slightly easier to handle
 			obj.simulationOutputLocation = [getenv('EDGEDIR'),'/SimulationOutput/' obj.pathName];
+
+		end
+
+
+		function c = MakeCellAtCentre(obj, N, x,y, ccm)
+
+			pgon = nsidedpoly(N, 'Radius', 0.5);
+			v = flipud(pgon.Vertices); % Necessary for the correct order
+
+			nodes = Node.empty();
+
+			for i = 1:N
+				nodes(i) = Node(v(i,1) + x, v(i,2) + y, obj.GetNextNodeId());
+			end
+
+			c = CellFree(ccm, nodes, obj.GetNextCellId());
 
 		end
 

@@ -2,6 +2,8 @@ classdef PlaneCellKiller < AbstractTissueLevelCellKiller
 	% A class for killing Boundary cells.
 	% Specify a plane and a direction
 	% if the cell centre moves to the wrong side, then it is killed
+	% The wrong side is specified by the direction of the normal
+
 	properties
 
 		point
@@ -22,10 +24,11 @@ classdef PlaneCellKiller < AbstractTissueLevelCellKiller
 
 		function KillCells(obj, t)
 
-			for i = 1:length(t.cellList)
-				if obj.IsCellPastPlane(t.cellList(i))
+			for i = length(t.cellList):-1:1
+				c = t.cellList(i);
+				if obj.IsCellPastPlane(c)
 					% Kill the cell
-					obj.EraseCellFromSimulation()
+					RemoveCellFromSimulation(obj, t, c);
 				end
 
 			end
@@ -46,46 +49,35 @@ classdef PlaneCellKiller < AbstractTissueLevelCellKiller
 
 		end
 
-		function RemoveRightBoundaryCellFromSimulation(obj, t)
+		function RemoveCellFromSimulation(obj, t, c)
 
 			
 			% Clean up elements
 
-			t.elementList(t.elementList == c.elementTop) = [];
-			t.elementList(t.elementList == c.elementRight) = [];
-			t.elementList(t.elementList == c.elementBottom) = [];
+			for i = 1:length(c.elementList)
 
-			c.nodeTopLeft.elementList( c.nodeTopLeft.elementList ==  c.elementTop ) = [];
-			c.nodeBottomLeft.elementList( c.nodeBottomLeft.elementList ==  c.elementBottom ) = [];
+				t.elementList(t.elementList == c.elementList(i)) = [];
+				if t.usingBoxes
+					% Shouldn't be handling this in the killer, but its here for now
+					% because we need to remove the element from th partition before
+					% it gets deleted
+					t.boxes.RemoveElementFromPartition(c.elementList(i));
+				end
 
-			c.nodeTopLeft.cellList( c.nodeTopLeft.cellList ==  c ) = [];
-			c.nodeBottomLeft.cellList( c.nodeBottomLeft.cellList ==  c ) = [];
+				c.elementList(i).delete;
 
-			c.elementLeft.cellList(c.elementLeft.cellList == c) = [];
-
-			if t.usingBoxes
-				t.boxes.RemoveElementFromPartition(c.elementTop);
-				t.boxes.RemoveElementFromPartition(c.elementRight);
-				t.boxes.RemoveElementFromPartition(c.elementBottom);
 			end
 
-			c.elementTop.delete;
-			c.elementRight.delete;
-			c.elementBottom.delete;
-			% c.elementLeft.internal = false; % Handled in the KillCells method of LineSImulatoin
+			for i = 1:length(c.nodeList)
 
-			% Clean up nodes 
+				t.nodeList(t.nodeList == c.nodeList(i)) = [];
+				if t.usingBoxes
+					t.boxes.RemoveNodeFromPartition(c.nodeList(i));
+				end
+				c.nodeList(i).delete;
 
-			t.nodeList(t.nodeList == c.nodeTopRight) = [];
-			t.nodeList(t.nodeList == c.nodeBottomRight) = [];
-
-			if t.usingBoxes
-				t.boxes.RemoveNodeFromPartition(c.nodeTopRight);
-				t.boxes.RemoveNodeFromPartition(c.nodeBottomRight);
 			end
 
-			c.nodeTopRight.delete;
-			c.nodeBottomRight.delete;
 
 			% Clean up cell
 
@@ -94,14 +86,14 @@ classdef PlaneCellKiller < AbstractTissueLevelCellKiller
 			% "one or more inputs of class 'AbstractCell' are heterogeneous
 			% and 'eq' is not sealed". I have no idea what this means, but
 			% it is a quirk of matlab OOP we have to work around
-			for i = 1:length(t.cellList)
+			for i = length(t.cellList)
 				oc = t.cellList(i);
-				if strcmp(class( oc ), 'SquareCellJoined')
-					if oc == c
-						t.cellList(i) = [];
-						break;
-					end
+
+				if oc == c
+					t.cellList(i) = [];
+					break;
 				end
+
 			end
 
 			c.delete;
