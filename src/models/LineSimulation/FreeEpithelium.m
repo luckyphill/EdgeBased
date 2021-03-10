@@ -32,7 +32,7 @@ classdef FreeEpithelium < LineSimulation
 			a = 0;
 
 			% Contact inhibition fraction
-			f = 0.9;
+			f = 0;
 
 			% The asymptote, separation, and limit distances for the interaction force
 			dAsym = 0;
@@ -41,7 +41,7 @@ classdef FreeEpithelium < LineSimulation
 
 			% The energy densities for the cell growth force
 			areaEnergy = 20;
-			perimeterEnergy = 40;
+			perimeterEnergy = 10;
 			tensionEnergy = 0;
 
 			%---------------------------------------------------
@@ -126,10 +126,10 @@ classdef FreeEpithelium < LineSimulation
 			obj.boxes = SpacePartition(0.5, 0.5, obj);
 
 			%---------------------------------------------------
-			% Add the data we'd like to store
+			% A modifier to help with the pinching issue
 			%---------------------------------------------------
 
-
+			obj.AddSimulationModifier(DivisionHack(1));
 
 			%---------------------------------------------------
 			% Add the data writers

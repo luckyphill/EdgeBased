@@ -192,7 +192,7 @@ classdef LayerOnStroma < LineSimulation
 			obj.AddCellBasedForce(StromaStructuralForce(stroma, sae, spe, 0));
 
 			% A force to keep the cell corners square - hopefully to stop node jumping after division
-			obj.AddCellBasedForce(CornerForceCouple(cornerParameter,cornerAngle));
+			% obj.AddCellBasedForce(CornerForceCouple(cornerParameter,cornerAngle));
 
 			% Node-Element interaction force - requires a SpacePartition
 			% Handles different interaction strengths between different cell types
@@ -216,12 +216,20 @@ classdef LayerOnStroma < LineSimulation
 			% nodeList comes from building the stroma
 			obj.AddSimulationModifier(   PinNodes(  [nodeList(1), nodeList(end-2:end)]  )   );
 
+			%---------------------------------------------------
+			% A modifier to help with the pinching issue
+			%---------------------------------------------------
+
+			obj.AddSimulationModifier(DivisionHack(1));
+
 
 			%---------------------------------------------------
 			% Add the data writers
 			%---------------------------------------------------
 
-			obj.pathName = sprintf('LayerOnStroma/n%gp%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%gcp%gca%g_seed%g/',N,p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, cornerParameter, cornerAngle, seed);
+			% obj.pathName = sprintf('LayerOnStroma/n%gp%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%gcp%gca%g_seed%g/',N,p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, cornerParameter, cornerAngle, seed);
+			obj.pathName = sprintf('LayerOnStroma/n%gp%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%g_seed%g/',N,p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, seed);
+
 			obj.AddSimulationData(SpatialState());
 			obj.AddDataWriter(WriteSpatialState(100,obj.pathName));
 			% obj.AddSimulationData(TrackCellGeometry(ceil(N/2)));
