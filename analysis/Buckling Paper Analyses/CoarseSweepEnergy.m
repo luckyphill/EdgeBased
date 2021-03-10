@@ -18,7 +18,7 @@ classdef CoarseSweepEnergy < Analysis
 
 		f = 0;
 
-		b = [20,30,40];
+		b = [5,10,15];
 
 		sae = [5:10:100];
 		spe = [5:10:100];
