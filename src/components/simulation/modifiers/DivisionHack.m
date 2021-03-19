@@ -27,7 +27,7 @@ classdef DivisionHack < AbstractSimulationModifier
 			% use ismember in an && or || statement if one of the vectors could
 			% be empty, it throws the error:
 			% Operands to the || and && operators must be convertible to logical scalar values.
-			% This error appears because when one of the inputs is empty, the output is
+			% This error appears because when one of the inputs to ismember is empty, the output is
  			% 0x0 empty logical array which doesn't seem very sensible to me
 
 			completedList = SquareCellJoined.empty();
@@ -47,18 +47,20 @@ classdef DivisionHack < AbstractSimulationModifier
 							if c.nodeBottomLeft == c.sisterCell.nodeBottomRight
 								cR = c;
 								cL = c.sisterCell;
-								sharedNode = c.nodeBottomLeft;
+								sharedNodeB = c.nodeBottomLeft;
+								sharedNodeT = c.nodeTopLeft;
 							else
 								cR = c.sisterCell;
 								cL = c;
-								sharedNode = c.nodeBottomRight;
+								sharedNodeB = c.nodeBottomRight;
+								sharedNodeB = c.nodeTopRight;
 							end
 
 							% Now we need to determine where the shared node should go
 							% Need to find a normal vector from the LtoR line and the
 							% current node position
 							LtoR = cR.nodeBottomRight.position - cL.nodeBottomLeft.position;
-							LtoN = sharedNode.position - cL.nodeBottomLeft.position;
+							LtoN = sharedNodeB.position - cL.nodeBottomLeft.position;
 
 							u = LtoR / norm(LtoR);
 
@@ -75,12 +77,32 @@ classdef DivisionHack < AbstractSimulationModifier
 
 							proportion = 1; %age/obj.fadeTime;
 
-							newPostion = sharedNode.position - proportion * PtoN;
+							newPostion = sharedNodeB.position - proportion * PtoN;
 
 							% Just need to shift the node now
-							t.AdjustNodePosition(sharedNode, newPostion);
+							t.AdjustNodePosition(sharedNodeB, newPostion);
+
+
+
+
+							% Same process, but for the top nodes
+							LtoR = cR.nodeTopRight.position - cL.nodeTopLeft.position;
+							LtoN = sharedNodeT.position - cL.nodeTopLeft.position;
+
+							u = LtoR / norm(LtoR);
+
+							d = dot(u,LtoN); 
+							LtoP = d*u; % P is the normal point
+
+							PtoN = LtoN - LtoP;
+
+							newPostion = sharedNodeT.position - proportion * PtoN;
+
+							% Just need to shift the node now
+							t.AdjustNodePosition(sharedNodeT, newPostion);
 
 							completedList(end + 1) = c;
+							
 						end
 
 					end
@@ -89,7 +111,6 @@ classdef DivisionHack < AbstractSimulationModifier
 
 			end
 
-			
 		end
 
 	end

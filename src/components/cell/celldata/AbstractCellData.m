@@ -1,4 +1,4 @@
-classdef (Abstract) AbstractCellData < handle & matlab.mixin.Heterogeneous
+classdef (Abstract) AbstractCellData < handle & matlab.mixin.Heterogeneous & matlab.mixin.Copyable
 	% This class sets out the required functions for working
 	% out various types of data that can be extracted from the 
 	% a cell
@@ -15,6 +15,9 @@ classdef (Abstract) AbstractCellData < handle & matlab.mixin.Heterogeneous
 	% then we might end up calculating multiple times per time step
 	% if the data is used in multiple places. To avoid this, we add in
 	% an age stamp for when the data was last calculated
+
+	% This class inherits from matlab.mixin.Copyable so the cellData can
+	% be copied and transfered to a daughter cell upon division
 
 	properties (Abstract)
 

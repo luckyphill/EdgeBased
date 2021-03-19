@@ -105,6 +105,12 @@ classdef LayerOnStroma < LineSimulation
 			c.cellType = epiCellType;
 			obj.cellList = c;
 
+			fadeTime = 3;
+
+			c.AddCellData(TargetPerimeterSquareControlled(fadeTime));
+			% c.AddCellData(TargetAreaDivision());
+			% c.AddCellData(TargetPerimeterDivision());
+
 
 			for i = 2:N
 				% Each time we advance to the next cell, the right most nodes and element of the previous cell
@@ -133,6 +139,10 @@ classdef LayerOnStroma < LineSimulation
 				c = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
 				c.cellType = epiCellType;
 				obj.cellList(end + 1) = c;
+
+				c.AddCellData(TargetPerimeterSquareControlled(fadeTime));
+				% c.AddCellData(TargetAreaDivision());
+				% c.AddCellData(TargetPerimeterDivision());
 
 			end
 

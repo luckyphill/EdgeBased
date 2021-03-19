@@ -592,7 +592,6 @@ classdef (Abstract) AbstractCellSimulation < matlab.mixin.SetGet
 
 		end
 
-
 		function VisualiseNodes(obj, r)
 			% r is cell radius
 
@@ -615,7 +614,6 @@ classdef (Abstract) AbstractCellSimulation < matlab.mixin.SetGet
 			axis equal
 
 		end
-
 
 		function VisualiseWireFrame(obj, varargin)
 

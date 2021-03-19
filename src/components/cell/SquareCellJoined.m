@@ -49,6 +49,7 @@ classdef SquareCellJoined < AbstractCell
 
 			obj.ancestorId = id;
 
+			% Default cell data. This can be updated outside of the cell constructor
 			cellDataArray = [CellArea(), CellPerimeter(), CellCentre(), TargetPerimeterSquare(), TargetArea()];
 
 			obj.AddCellData(cellDataArray);
@@ -169,10 +170,7 @@ classdef SquareCellJoined < AbstractCell
 			newElementMiddle.AddCell(obj);
 						
 
-			% Old cell should be completely remodelled by this point, adjust the age back to zero
-
-			obj.CellCycleModel.SetAge(0);
-			obj.age = 0;
+			
 
 			% Reset the node list
 			obj.nodeList = [obj.nodeBottomLeft, obj.nodeBottomRight, obj.nodeTopRight, obj.nodeTopLeft];
@@ -182,6 +180,13 @@ classdef SquareCellJoined < AbstractCell
 			newNodeList 	= [nodeMiddleTop, nodeMiddleBottom];
 			newElementList	= [newElementMiddle, newElementTop, newElementBottom];
 
+			% Update the stuff not related to the cell's nodes and elements
+
+			% Old cell should be completely remodelled by this point, adjust the age back to zero
+
+			obj.CellCycleModel.SetAge(0);
+			obj.age = 0;
+
 			% Update the sister cells
 			newCell.sisterCell = obj;
 			obj.sisterCell = newCell;
@@ -190,7 +195,17 @@ classdef SquareCellJoined < AbstractCell
 
 			% And make sure the new cell is of the same type
 			newCell.cellType = obj.cellType;
-		
+
+			% Transfer the cell data objects to the new cell
+			% This is a quick hack way to do it and it won't work if the
+			% classes become too complicated
+			keys = obj.cellData.keys;
+			for i=1:length(keys)
+				cellDataArray(i) = copy(obj.cellData(keys{i}));
+			end
+
+			newCell.AddCellData(cellDataArray);
+
 		end
 
 		function inside = IsPointInsideCell(obj, point)
