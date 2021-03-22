@@ -18,10 +18,10 @@ classdef FineSweepEnergy < Analysis
 
 		f = 0;
 
-		b = 20;
+		b = 10;
 
-		sae = [5:15];
-		spe = [5:15];
+		sae = [1:20];
+		spe = [1:20];
 
 		seed = 1:10;
 

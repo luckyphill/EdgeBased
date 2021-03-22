@@ -1,1 +1,1 @@
-sbatch --array=0-1210 --time=12:00:00 ../generalSbatch7seed.sh ManageLayerOnStroma FineSweepEnergy.txt 
+sbatch --array=0-4000 --time=12:00:00 ../generalSbatch7seed.sh ManageLayerOnStroma FineSweepEnergy.txt 
