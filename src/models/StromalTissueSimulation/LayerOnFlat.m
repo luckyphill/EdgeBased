@@ -1,8 +1,6 @@
-classdef LayerOnStroma < LineSimulation
+classdef LayerOnFlat < LineSimulation
 
-	% This simulation is the most basic - a simple row of cells growing on
-	% a plate. It allows us to choose the number of initial cells
-	% the force related parameters, and the cell cycle lengths
+	% A row of cells growing on a flat surface
 
 	properties
 
@@ -21,20 +19,17 @@ classdef LayerOnStroma < LineSimulation
 
 	methods
 
-		function obj = LayerOnStroma(N, p, g, b, f, sae, spe, seed)
+		function obj = LayerOnFlat(N, p, g, b, f, an, ag, pn, pg, seed)
 			
 			obj.SetRNGSeed(seed);
 
 			epiCellType = 1;
-			stromalCellType = 5;
 
 			% N is the number of cells in the layer. This in turn defines the width
 			% of the stromal blob supporting the cells
 			% p, the pause/resting phase duration
 			% g, the growing phase duration
 			% b, The interaction spring force parameter
-			% sae, the stromal area energy factor
-			% spe, the stroma perimeter energy factor
 
 			% Contact inhibition fraction
 			% f = 0.9;
@@ -45,22 +40,16 @@ classdef LayerOnStroma < LineSimulation
 			dLim = 0.2;
 
 			% The energy densities for the cell growth force
-			areaEnergy = 40;
+			areaEnergy = 20;
 			perimeterEnergy = 10;
 			tensionEnergy = 0;
-			% Meaningless change so I have something to commit in git
-			
-			% Corner force parameter for keeping the cells square
-			cornerParameter = 0.5;
-			cornerAngle = 1.57; % pi/2 truncated for the sake of teh folder name below
 
+			newArea = an;
+			grownArea = ag;
+			newPerimeter = pn;
+			grownPrimeter = pg;
 
 			% This simulation only allows cells to exist in a limited x domain
-
-			% Cells are set to be 0.5 units wide, and we make the supporting stroma
-			% 0.5 * (N + 1) in length so there is a little room to expand before the
-			% cell killer kicks in
-
 
 			leftBoundary = -0.25;
 			rightBoundary = 0.5 * N + 0.25;
@@ -105,11 +94,11 @@ classdef LayerOnStroma < LineSimulation
 			c.cellType = epiCellType;
 			obj.cellList = c;
 
-			fadeTime = 3;
+			fadeTime = 2;
 
-			c.AddCellData(TargetPerimeterSquareControlled(fadeTime));
-			% c.AddCellData(TargetAreaDivision());
-			% c.AddCellData(TargetPerimeterDivision());
+			c.AddCellData(TargetAreaSpecified(newArea,grownArea));
+			c.AddCellData(TargetPerimeterSpecified(newPerimeter,grownPrimeter));
+			% c.AddCellData(TargetPerimeterControlled(fadeTime,newPerimeter,grownPrimeter));
 
 
 			for i = 2:N
@@ -140,9 +129,10 @@ classdef LayerOnStroma < LineSimulation
 				c.cellType = epiCellType;
 				obj.cellList(end + 1) = c;
 
-				c.AddCellData(TargetPerimeterSquareControlled(fadeTime));
-				% c.AddCellData(TargetAreaDivision());
-				% c.AddCellData(TargetPerimeterDivision());
+
+				c.AddCellData(TargetAreaSpecified(newArea,grownArea));
+				c.AddCellData(TargetPerimeterSpecified(newPerimeter,grownPrimeter));
+				% c.AddCellData(TargetPerimeterControlled(fadeTime,newPerimeter,grownPrimeter));
 
 			end
 
@@ -152,79 +142,29 @@ classdef LayerOnStroma < LineSimulation
 			
 
 			%---------------------------------------------------
-			% Make the cell that acts as the stroma
-			%---------------------------------------------------
-			stromaTop = -0.1;
-			stromaBottom = -4;
-			nodeList = Node.empty();
-
-			% We add in twice as many edges along the top of the stroma as
-			% there are cells in total.
-			dx = (leftBoundary - rightBoundary)/(2*N);
-			for x = rightBoundary:dx:leftBoundary
-				nodeList(end + 1) = Node(x, stromaTop, obj.GetNextNodeId());
-			end
-
-			nodeList(end + 1) = Node(leftBoundary, stromaBottom, obj.GetNextNodeId());
-			nodeList(end + 1) = Node(rightBoundary, stromaBottom, obj.GetNextNodeId());
-			
-			elementList = Element.empty();
-			for i = 1:length(nodeList)-1
-				elementList(end + 1) = Element(nodeList(i), nodeList(i+1), obj.GetNextElementId() );
-			end
-
-			elementList(end + 1) = Element(nodeList(end), nodeList(1), obj.GetNextElementId() );
-
-			ccm = NoCellCycle();
-			ccm.colour = stromalCellType;
-
-			stroma = CellFree(ccm, nodeList, elementList, obj.GetNextCellId());
-
-			% Critical to stop the ChasteNagaiHondaForce beign applied to the stroma
-			stroma.cellType = stromalCellType;
-
-			stroma.grownCellTargetArea = (rightBoundary - leftBoundary) * (stromaTop - stromaBottom);
-
-			stroma.cellData('targetPerimeter') = TargetPerimeterStroma( 2 * (rightBoundary - leftBoundary) + 2 * (stromaTop - stromaBottom));
-
-			obj.AddNodesToList( nodeList );
-			obj.AddElementsToList( elementList );
-			obj.cellList = [obj.cellList, stroma];
-
-			%---------------------------------------------------
 			% Add in the forces
 			%---------------------------------------------------
 
 			% Cell growth force
 			obj.AddCellBasedForce(PolygonCellGrowthForce(areaEnergy, perimeterEnergy, tensionEnergy));
 
-			% A special distinct force for the stroma
-			obj.AddCellBasedForce(StromaStructuralForce(stroma, sae, spe, 0));
+			point = [0,-0.1];
+			normal = [0,1];
 
-			% A force to keep the cell corners square - hopefully to stop node jumping after division
-			% obj.AddCellBasedForce(CornerForceCouple(cornerParameter,cornerAngle));
-
-			% Node-Element interaction force - requires a SpacePartition
-			% Handles different interaction strengths between different cell types
-			cellTypes = [epiCellType,stromalCellType];
-			att = [0,b;
-				   b,0]; % No attraction between epithelial cells or between stromal cells
-			obj.AddNeighbourhoodBasedForce(CellTypeInteractionForce(att, repmat(b,2), repmat(dAsym,2), repmat(dSep,2), repmat(dLim,2), cellTypes, obj.dt, true));
+			obj.AddTissueBasedForce(FlatPlaneForce(b, point, normal, dAsym, dSep, dLim));
 			
 			%---------------------------------------------------
 			% Add space partition
 			%---------------------------------------------------
 			% In this simulation we are fixing the size of the boxes
 
-			obj.boxes = SpacePartition(0.5, 0.5, obj);
+			% obj.boxes = SpacePartition(0.5, 0.5, obj);
+			obj.usingBoxes = false;
 
 			%---------------------------------------------------
 			% Add the modfier to keep the stromal corner nodes
 			% locked in place
 			%---------------------------------------------------
-			
-			% nodeList comes from building the stroma
-			obj.AddSimulationModifier(   PinNodes(  [nodeList(1), nodeList(end-2:end)]  )   );
 
 			%---------------------------------------------------
 			% A modifier to help with the pinching issue
@@ -237,13 +177,13 @@ classdef LayerOnStroma < LineSimulation
 			% Add the data writers
 			%---------------------------------------------------
 
-			% obj.pathName = sprintf('LayerOnStroma/n%gp%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%gcp%gca%g_seed%g/',N,p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, cornerParameter, cornerAngle, seed);
-			obj.pathName = sprintf('LayerOnStroma/n%gp%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%g_seed%g/',N,p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, seed);
+			
+			obj.pathName = sprintf('LayerOnFlat/n%gp%gg%gb%gf%gda%gds%gdl%galpha%gbeta%gt%gan%gag%gpn%gpg%g_seed%g/',N,p,g,b,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, newArea, grownArea, newPerimeter, grownPrimeter, seed);
 
 			obj.AddSimulationData(SpatialState());
 			obj.AddDataWriter(WriteSpatialState(100,obj.pathName));
 			obj.AddSimulationData(TrackCellGeometry());
-			obj.AddDataWriter(WriteCellGeometry(10,obj.pathName));
+			obj.AddDataWriter(WriteCellGeometry(1,obj.pathName));
 
 			%---------------------------------------------------
 			% All done. Ready to roll

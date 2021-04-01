@@ -24,7 +24,7 @@ classdef TargetAreaSpecified < AbstractCellData
 
 			fraction = c.CellCycleModel.GetGrowthPhaseFraction();
 
-			obj.data = c.newCell + fraction * (obj.grownCell - obj.newCell);
+			obj.data = obj.newCell + fraction * (obj.grownCell - obj.newCell);
 
 		end
 		

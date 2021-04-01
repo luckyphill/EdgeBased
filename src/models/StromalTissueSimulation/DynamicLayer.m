@@ -1,4 +1,4 @@
-classdef LayerOnStroma < LineSimulation
+classdef DynamicLayer < LineSimulation
 
 	% This simulation is the most basic - a simple row of cells growing on
 	% a plate. It allows us to choose the number of initial cells
@@ -21,20 +21,18 @@ classdef LayerOnStroma < LineSimulation
 
 	methods
 
-		function obj = LayerOnStroma(N, p, g, b, f, sae, spe, seed)
+		function obj = DynamicLayer(w, p, g, b, f, sae, spe, seed)
 			
 			obj.SetRNGSeed(seed);
 
 			epiCellType = 1;
 			stromalCellType = 5;
 
-			% N is the number of cells in the layer. This in turn defines the width
-			% of the stromal blob supporting the cells
+			% w is the width of the domain
 			% p, the pause/resting phase duration
 			% g, the growing phase duration
 			% b, The interaction spring force parameter
-			% sae, the stromal area energy factor
-			% spe, the stroma perimeter energy factor
+			% f the contact inhibition fraction
 
 			% Contact inhibition fraction
 			% f = 0.9;
@@ -45,25 +43,20 @@ classdef LayerOnStroma < LineSimulation
 			dLim = 0.2;
 
 			% The energy densities for the cell growth force
-			areaEnergy = 40;
+			areaEnergy = 20;
 			perimeterEnergy = 10;
 			tensionEnergy = 0;
-			% Meaningless change so I have something to commit in git
-			
-			% Corner force parameter for keeping the cells square
-			cornerParameter = 0.5;
-			cornerAngle = 1.57; % pi/2 truncated for the sake of teh folder name below
 
+			% Chosen from empirical testing
+			newArea = 0.55;
+			grownArea = 1;
+			newPerimeter = 3.4;
+			grownPrimeter = 4;
 
 			% This simulation only allows cells to exist in a limited x domain
 
-			% Cells are set to be 0.5 units wide, and we make the supporting stroma
-			% 0.5 * (N + 1) in length so there is a little room to expand before the
-			% cell killer kicks in
-
-
-			leftBoundary = -0.25;
-			rightBoundary = 0.5 * N + 0.25;
+			leftBoundary = -w/2;
+			rightBoundary = w/2;
 
 			k = BoundaryCellKiller(leftBoundary, rightBoundary);
 
@@ -79,10 +72,15 @@ classdef LayerOnStroma < LineSimulation
 
 			% Make the nodes
 
-			nodeTopLeft 	= Node(0,1,obj.GetNextNodeId());
-			nodeBottomLeft 	= Node(0,0,obj.GetNextNodeId());
-			nodeTopRight 	= Node(0.5,1,obj.GetNextNodeId());
-			nodeBottomRight	= Node(0.5,0,obj.GetNextNodeId());
+			% Empirically determined to match the shape of cells due to 
+			% an, ag, pn, pg
+			cW = 0.4;
+			cH = 1.3;
+
+			nodeTopLeft 	= Node(leftBoundary,cH,obj.GetNextNodeId());
+			nodeBottomLeft 	= Node(leftBoundary,0,obj.GetNextNodeId());
+			nodeTopRight 	= Node(leftBoundary + cW,cH,obj.GetNextNodeId());
+			nodeBottomRight	= Node(leftBoundary + cW,0,obj.GetNextNodeId());
 
 			obj.AddNodesToList([nodeBottomLeft, nodeBottomRight, nodeTopRight, nodeTopLeft]);
 
@@ -105,21 +103,20 @@ classdef LayerOnStroma < LineSimulation
 			c.cellType = epiCellType;
 			obj.cellList = c;
 
-			fadeTime = 3;
-
-			c.AddCellData(TargetPerimeterSquareControlled(fadeTime));
-			% c.AddCellData(TargetAreaDivision());
-			% c.AddCellData(TargetPerimeterDivision());
+			c.AddCellData(TargetAreaSpecified(newArea,grownArea));
+			c.AddCellData(TargetPerimeterSpecified(newPerimeter,grownPrimeter));
 
 
-			for i = 2:N
+			nCells = floor(w/cW);
+
+			for i = 2:nCells
 				% Each time we advance to the next cell, the right most nodes and element of the previous cell
 				% become the leftmost element of the new cell
 
 				nodeBottomLeft 	= nodeBottomRight;
 				nodeTopLeft 	= nodeTopRight;
-				nodeTopRight 	= Node(i*0.5,1,obj.GetNextNodeId());
-				nodeBottomRight	= Node(i*0.5,0,obj.GetNextNodeId());
+				nodeTopRight 	= Node(leftBoundary + i*cW,cH,obj.GetNextNodeId());
+				nodeBottomRight	= Node(leftBoundary + i*cW,0,obj.GetNextNodeId());
 				
 
 				obj.AddNodesToList([nodeBottomRight, nodeTopRight]);
@@ -140,9 +137,8 @@ classdef LayerOnStroma < LineSimulation
 				c.cellType = epiCellType;
 				obj.cellList(end + 1) = c;
 
-				c.AddCellData(TargetPerimeterSquareControlled(fadeTime));
-				% c.AddCellData(TargetAreaDivision());
-				% c.AddCellData(TargetPerimeterDivision());
+				c.AddCellData(TargetAreaSpecified(newArea,grownArea));
+				c.AddCellData(TargetPerimeterSpecified(newPerimeter,grownPrimeter));
 
 			end
 
@@ -160,7 +156,7 @@ classdef LayerOnStroma < LineSimulation
 
 			% We add in twice as many edges along the top of the stroma as
 			% there are cells in total.
-			dx = (leftBoundary - rightBoundary)/(2*N);
+			dx = (leftBoundary - rightBoundary)/(2*nCells);
 			for x = rightBoundary:dx:leftBoundary
 				nodeList(end + 1) = Node(x, stromaTop, obj.GetNextNodeId());
 			end
@@ -236,14 +232,13 @@ classdef LayerOnStroma < LineSimulation
 			%---------------------------------------------------
 			% Add the data writers
 			%---------------------------------------------------
-
-			% obj.pathName = sprintf('LayerOnStroma/n%gp%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%gcp%gca%g_seed%g/',N,p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, cornerParameter, cornerAngle, seed);
-			obj.pathName = sprintf('LayerOnStroma/n%gp%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%g_seed%g/',N,p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, seed);
+			
+			obj.pathName = sprintf('DynamicLayer/w%gp%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%gan%gag%gpn%gpg%g_seed%g/',w,p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, newArea, grownArea, newPerimeter, grownPrimeter, seed);
 
 			obj.AddSimulationData(SpatialState());
 			obj.AddDataWriter(WriteSpatialState(100,obj.pathName));
-			obj.AddSimulationData(TrackCellGeometry());
-			obj.AddDataWriter(WriteCellGeometry(10,obj.pathName));
+			% obj.AddSimulationData(TrackCellGeometry());
+			% obj.AddDataWriter(WriteCellGeometry(10,obj.pathName));
 
 			%---------------------------------------------------
 			% All done. Ready to roll

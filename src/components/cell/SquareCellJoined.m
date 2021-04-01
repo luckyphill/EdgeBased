@@ -206,6 +206,8 @@ classdef SquareCellJoined < AbstractCell
 
 			newCell.AddCellData(cellDataArray);
 
+			newCell.newCellTargetArea = obj.newCellTargetArea;
+
 		end
 
 		function inside = IsPointInsideCell(obj, point)

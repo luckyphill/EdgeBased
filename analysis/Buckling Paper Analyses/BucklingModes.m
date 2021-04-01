@@ -1,10 +1,7 @@
-classdef NoAreaEffect < Analysis
+classdef BucklingModes < Analysis
 
-	% This analysis demonstrates that buckling likelihood is not impacted by
-	% the area properties of the stroma and only impacted by the boundary tension
-	% properties (which is represented by an energy due to difference from intended
-	% length). This an easily explainable phenomenon, due to the fact there are many
-	% ways to draw the target area, but only one way to draw the target perimeter
+	% This analysis compares buckling due to weak membrane adhesion,
+	% buckling due to weak membrane tension
 
 	properties
 
@@ -18,16 +15,16 @@ classdef NoAreaEffect < Analysis
 
 		f = 0;
 
-		b = 10;
+		b = 2:19;
 
-		sae = [2:2:40];
+		sae = 10;
 		spe = [2:19];
 
 		seed = 1:50;
 
 		targetTime = 500;
 
-		analysisName = 'NoAreaEffect';
+		analysisName = 'BucklingModes';
 
 		avgGrid = {}
 		timePoints = {}
@@ -46,7 +43,7 @@ classdef NoAreaEffect < Analysis
 
 	methods
 
-		function obj = NoAreaEffect()
+		function obj = BucklingModes()
 
 			% Each seed runs in a separate job
 			obj.specifySeedDirectly = true;
@@ -149,10 +146,12 @@ classdef NoAreaEffect < Analysis
 
 			h = figure;
 
-			scatter(obj.parameterSet(:,7), obj.parameterSet(:,6), 100, sum(buckleOutcome,2)/length(obj.seed),'filled');
-			ylabel('Area energy parameter','Interpreter', 'latex', 'FontSize', 15);xlabel('Perimeter energy parameter','Interpreter', 'latex', 'FontSize', 15);
+			scatter(obj.parameterSet(:,7), obj.parameterSet(:,4), 100, sum(buckleOutcome,2)/length(obj.seed),'filled');
+			ylabel('Adhesion parameter','Interpreter', 'latex', 'FontSize', 15);
+			xlabel('Perimeter energy parameter','Interpreter', 'latex', 'FontSize', 15);
 			title(sprintf('Proportion buckled, p=%g, g=%g',obj.p,obj.g),'Interpreter', 'latex', 'FontSize', 22);
-			ylim([min(obj.sae)-1, max(obj.sae)+1]);xlim([min(obj.spe)-1, max(obj.spe)+1]);
+			ylim([min(obj.b)-1, max(obj.b)+1]);
+			xlim([min(obj.spe)-1, max(obj.spe)+1]);
 			colorbar; caxis([0 1]);
 			colormap jet;
 			ax = gca;
@@ -161,7 +160,7 @@ classdef NoAreaEffect < Analysis
 			set(h, 'InvertHardcopy', 'off')
 			set(h,'color','w');
 
-			SavePlot(obj, h, sprintf('BodyParams'));
+			SavePlot(obj, h, sprintf('PerimVSAdhesion'));
 
 
 
