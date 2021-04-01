@@ -15,10 +15,10 @@ classdef BucklingModes < Analysis
 
 		f = 0;
 
-		b = 2:19;
+		b = [1:9,11:20]; % Do this because the b=10 set is part of NoAreaEffect
 
 		sae = 10;
-		spe = [2:19];
+		spe = 1:20;
 
 		seed = 1:50;
 
