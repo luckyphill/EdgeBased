@@ -20,8 +20,8 @@ classdef NoAreaEffect < Analysis
 
 		b = 10;
 
-		sae = [2:2:40];
-		spe = [2:19];
+		sae = [1:20];
+		spe = [1:20];
 
 		seed = 1:50;
 

@@ -13,8 +13,8 @@ classdef FineSweepEnergy < Analysis
 		
 		w = 10;
 
-		p = 5;
-		g = 10;
+		p = 10;
+		g = 5;
 
 		f = 0;
 
