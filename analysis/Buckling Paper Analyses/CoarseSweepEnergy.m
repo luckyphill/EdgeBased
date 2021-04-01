@@ -11,7 +11,7 @@ classdef CoarseSweepEnergy < Analysis
 		% STATIC: DO NOT CHANGE
 		% IF CHANGE IS NEEDED, MAKE A NEW OBJECT
 		
-		n = 20;
+		w = 10;
 
 		p = 5;
 		g = 10;
@@ -38,7 +38,7 @@ classdef CoarseSweepEnergy < Analysis
 
 		simulationRuns = 20
 		slurmTimeNeeded = 12
-		simulationDriverName = 'ManageLayerOnStroma'
+		simulationDriverName = 'ManageDynamicLayer'
 		simulationInputCount = 7
 		
 
@@ -60,7 +60,7 @@ classdef CoarseSweepEnergy < Analysis
 
 			params = [];
 
-			for n = obj.n
+			for w = obj.w
 				for p = obj.p
 					for g = obj.g
 						for b = obj.b
@@ -68,7 +68,7 @@ classdef CoarseSweepEnergy < Analysis
 								for sae = obj.sae
 									for spe = obj.spe
 
-										params(end+1,:) = [n,p,g,b,f,sae,spe];
+										params(end+1,:) = [w,p,g,b,f,sae,spe];
 
 									end
 								end
@@ -105,7 +105,7 @@ classdef CoarseSweepEnergy < Analysis
 			for i = 1:length(obj.parameterSet)
 				s = obj.parameterSet(i,:);
 				% n, p, g, b, f, sae, spe, seed
-				n = s(1);
+				w = s(1);
 				p = s(2);
 				g = s(3);
 				b = s(4);
@@ -117,7 +117,7 @@ classdef CoarseSweepEnergy < Analysis
 				bottom = [];
 				for j = obj.seed
 					% try
-						a = ManageLayerOnStroma(n,p,g,b,f,sae,spe,j);
+						a = ManageDynamicLayer(w,p,g,b,f,sae,spe,j);
 						a.LoadSimulationData();
 						if max(a.data.bottomWiggleData) >= buckleThreshold
 							buckleOutcome(i,j) = true;
