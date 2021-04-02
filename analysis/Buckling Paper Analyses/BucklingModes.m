@@ -102,7 +102,7 @@ classdef BucklingModes < Analysis
 			for i = 1:length(obj.parameterSet)
 				s = obj.parameterSet(i,:);
 				% n, p, g, b, f, sae, spe, seed
-				n = s(1);
+				w = s(1);
 				p = s(2);
 				g = s(3);
 				b = s(4);
@@ -114,7 +114,7 @@ classdef BucklingModes < Analysis
 				bottom = [];
 				for j = obj.seed
 					% try
-						a = ManageLayerOnStroma(n,p,g,b,f,sae,spe,j);
+						a = ManageDynamicLayer(w,p,g,b,f,sae,spe,j);
 						a.LoadSimulationData();
 						if max(a.data.bottomWiggleData) >= buckleThreshold
 							buckleOutcome(i,j) = true;

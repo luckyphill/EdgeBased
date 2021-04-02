@@ -105,7 +105,7 @@ classdef NoAreaEffect < Analysis
 			for i = 1:length(obj.parameterSet)
 				s = obj.parameterSet(i,:);
 				% n, p, g, b, f, sae, spe, seed
-				n = s(1);
+				w = s(1);
 				p = s(2);
 				g = s(3);
 				b = s(4);
@@ -117,7 +117,7 @@ classdef NoAreaEffect < Analysis
 				bottom = [];
 				for j = obj.seed
 					% try
-						a = ManageLayerOnStroma(n,p,g,b,f,sae,spe,j);
+						a = ManageDynamicLayer(w,p,g,b,f,sae,spe,j);
 						a.LoadSimulationData();
 						if max(a.data.bottomWiggleData) >= buckleThreshold
 							buckleOutcome(i,j) = true;
@@ -150,7 +150,8 @@ classdef NoAreaEffect < Analysis
 			h = figure;
 
 			scatter(obj.parameterSet(:,7), obj.parameterSet(:,6), 100, sum(buckleOutcome,2)/length(obj.seed),'filled');
-			ylabel('Area energy parameter','Interpreter', 'latex', 'FontSize', 15);xlabel('Perimeter energy parameter','Interpreter', 'latex', 'FontSize', 15);
+			ylabel('Area energy parameter','Interpreter', 'latex', 'FontSize', 15);
+			xlabel('Perimeter energy parameter','Interpreter', 'latex', 'FontSize', 15);
 			title(sprintf('Proportion buckled, p=%g, g=%g',obj.p,obj.g),'Interpreter', 'latex', 'FontSize', 22);
 			ylim([min(obj.sae)-1, max(obj.sae)+1]);xlim([min(obj.spe)-1, max(obj.spe)+1]);
 			colorbar; caxis([0 1]);
