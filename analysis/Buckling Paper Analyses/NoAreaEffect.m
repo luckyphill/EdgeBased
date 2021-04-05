@@ -56,7 +56,7 @@ classdef NoAreaEffect < Analysis
 
 		function MakeParameterSet(obj)
 
-			% n, p, g, b, f, sae, spe, seed
+			% w, p, g, b, f, sae, spe, seed
 
 			params = [];
 
@@ -104,7 +104,7 @@ classdef NoAreaEffect < Analysis
 
 			for i = 1:length(obj.parameterSet)
 				s = obj.parameterSet(i,:);
-				% n, p, g, b, f, sae, spe, seed
+				% w, p, g, b, f, sae, spe, seed
 				w = s(1);
 				p = s(2);
 				g = s(3);
