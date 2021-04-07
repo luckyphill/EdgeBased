@@ -113,9 +113,11 @@ classdef BucklingModes < Analysis
 
 				bottom = [];
 				for j = obj.seed
-					% try
-						a = ManageDynamicLayer(w,p,g,b,f,sae,spe,j);
-						a.LoadSimulationData();
+				
+					a = ManageDynamicLayer(w,p,g,b,f,sae,spe,j);
+					a.LoadSimulationData();
+
+					if ~isnan(a.data.bottomWiggleData)
 						if max(a.data.bottomWiggleData) >= buckleThreshold
 							buckleOutcome(i,j) = true;
 							buckleTime(i,j) = find(a.data.bottomWiggleData >= buckleThreshold,1) * 20 * a.dt;
@@ -123,9 +125,12 @@ classdef BucklingModes < Analysis
 							buckleOutcome(i,j) = false;
 							buckleTime(i,j) = obj.targetTime;
 						end
-
-
-					% end
+					else
+						% In case the simulation fails for some reason
+						buckleOutcome(i,j) = nan;
+						buckleTime(i,j) = nan;
+					end
+			
 				end
 
 				fprintf('Completed %3.2f%%\n', 100*i/length(obj.parameterSet));
@@ -146,7 +151,9 @@ classdef BucklingModes < Analysis
 
 			h = figure;
 
-			scatter(obj.parameterSet(:,7), obj.parameterSet(:,4), 100, sum(buckleOutcome,2)/length(obj.seed),'filled');
+			data = nansum(buckleOutcome,2)./sum(~isnan(buckleOutcome),2);
+
+			scatter(obj.parameterSet(:,7), obj.parameterSet(:,4), 100, data,'filled');
 			ylabel('Adhesion parameter','Interpreter', 'latex', 'FontSize', 15);
 			xlabel('Perimeter energy parameter','Interpreter', 'latex', 'FontSize', 15);
 			title(sprintf('Proportion buckled, p=%g, g=%g',obj.p,obj.g),'Interpreter', 'latex', 'FontSize', 22);
