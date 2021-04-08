@@ -35,6 +35,7 @@ classdef NoAreaEffect < Analysis
 		stabilityGrids = {};
 
 		parameterSet = []
+		missingParameterSet = []
 
 		simulationRuns = 50
 		slurmTimeNeeded = 12
@@ -48,8 +49,8 @@ classdef NoAreaEffect < Analysis
 
 		function obj = NoAreaEffect()
 
-			% Each seed runs in a separate job
-			obj.specifySeedDirectly = true;
+			obj.seedIsInParameterSet = false; % The seed not given in MakeParameterSet, it is set in properties
+			obj.seedHandledByScript = false; % The seed will be in the parameter file, not the job script
 			obj.usingHPC = true;
 
 		end
@@ -131,6 +132,9 @@ classdef NoAreaEffect < Analysis
 						% In case the simulation fails for some reason
 						buckleOutcome(i,j) = nan;
 						buckleTime(i,j) = nan;
+
+						obj.missingParameterSet(end + 1) =[w,p,g,b,f,sae,spe,j];
+
 					end
 
 
@@ -143,6 +147,10 @@ classdef NoAreaEffect < Analysis
 
 			obj.result = {buckleOutcome, buckleTime};
 
+			if ~isempty(obj.missingParameterSet)
+
+				obj.ProduceMissingDataSimulationFiles();
+			end
 			
 
 		end

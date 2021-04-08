@@ -28,8 +28,8 @@ classdef MonolayerAreaAnalysis < Analysis
 
 		function obj = MonolayerAreaAnalysis(n, p, g, b, f, sae, spe, seed)
 
-			% Each seed runs in a separate job
-			obj.specifySeedDirectly = true;
+			obj.seedIsInParameterSet = false; % The seed not given in MakeParameterSet, it is set in properties
+			obj.seedHandledByScript = false; % The seed will be in the parameter file, not the job script
 
 			obj.n = n;
 			obj.p = p;

@@ -23,7 +23,8 @@ classdef VolfsonMultiAnalysis < Analysis
 
 		function obj = VolfsonMultiAnalysis(seed)
 
-			obj.specifySeedDirectly = true;
+			obj.seedIsInParameterSet = false; % The seed not given in MakeParameterSet, it is set in properties
+			obj.seedHandledByScript = false; % The seed will be in the parameter file, not the job script
   
 			obj.seed = seed;
 
