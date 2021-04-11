@@ -32,6 +32,7 @@ classdef BucklingModes < Analysis
 		stabilityGrids = {};
 
 		parameterSet = []
+		missingParameterSet = []
 
 		simulationRuns = 50
 		slurmTimeNeeded = 12
@@ -129,6 +130,8 @@ classdef BucklingModes < Analysis
 						% In case the simulation fails for some reason
 						buckleOutcome(i,j) = nan;
 						buckleTime(i,j) = nan;
+
+						obj.missingParameterSet(end + 1,:) =[w,p,g,b,f,sae,spe,j];
 					end
 			
 				end
