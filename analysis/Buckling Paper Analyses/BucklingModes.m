@@ -143,6 +143,10 @@ classdef BucklingModes < Analysis
 
 			obj.result = {buckleOutcome, buckleTime};
 
+			if ~isempty(obj.missingParameterSet)
+
+				obj.ProduceMissingDataSimulationFiles();
+			end
 			
 
 		end
