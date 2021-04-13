@@ -59,14 +59,26 @@ classdef ManageDynamicLayer < MatlabSimulation
 			obj.simObj = DynamicLayer(w, p, g, b, f, sae, spe, seed);
 			obj.simObj.dt = obj.dt;
 			
-			% Remove the default spatial state output, and add the wiggle ratio output
+			% Remove the default spatial state output
 			remove(obj.simObj.simData,'spatialState');
-			obj.simObj.AddSimulationData(BottomWiggleRatio());
-			obj.simObj.dataWriters = WriteBottomWiggleRatio(20,obj.simObj.pathName);
+			obj.simObj.dataWriters = AbstractDataWriter.empty();
 
-			obj.outputTypes = {BottomWiggleData};
+			obj.outputTypes = {BottomWiggleData, StromaWiggleData};
 
 			obj.GenerateSaveLocation();
+
+			obj.LoadSimulationData();
+
+			% Only add the data types that are missing
+			if isnan(obj.data.bottomWiggleData)
+				obj.simObj.AddSimulationData(BottomWiggleRatio());
+				obj.simObj.AddDataWriter(WriteBottomWiggleRatio(20,obj.simObj.pathName));
+			end
+
+			if isnan(obj.data.stromaWiggleData)
+				obj.simObj.AddSimulationData(StromaWiggleRatio());
+				obj.simObj.AddDataWriter(WriteStromaWiggleRatio(20,obj.simObj.pathName));
+			end
 
 		end
 

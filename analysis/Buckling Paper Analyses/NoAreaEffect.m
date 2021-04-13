@@ -29,11 +29,6 @@ classdef NoAreaEffect < Analysis
 
 		analysisName = 'NoAreaEffect';
 
-		avgGrid = {}
-		timePoints = {}
-
-		stabilityGrids = {};
-
 		parameterSet = []
 		missingParameterSet = []
 

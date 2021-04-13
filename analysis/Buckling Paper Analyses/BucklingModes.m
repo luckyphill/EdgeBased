@@ -15,7 +15,7 @@ classdef BucklingModes < Analysis
 
 		f = 0;
 
-		b = [1:9,11:20]; % Do this because the b=10 set is part of NoAreaEffect
+		b = 1:20;
 
 		sae = 10;
 		spe = 1:20;
@@ -25,11 +25,6 @@ classdef BucklingModes < Analysis
 		targetTime = 500;
 
 		analysisName = 'BucklingModes';
-
-		avgGrid = {}
-		timePoints = {}
-
-		stabilityGrids = {};
 
 		parameterSet = []
 		missingParameterSet = []
