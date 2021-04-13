@@ -29,7 +29,7 @@ classdef StromaWiggleRatio < AbstractSimulationData
 			for i = 1:t.GetNumCells()
 				% Find the stromal cell
 				if t.cellList(i).cellType == 5 %
-					s = t.cellList(i).cellType;
+					s = t.cellList(i);
 					break;
 				end
 			end
