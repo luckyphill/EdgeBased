@@ -76,7 +76,7 @@ classdef ManageDynamicLayer < MatlabSimulation
 			end
 
 			if isnan(obj.data.stromaWiggleData)
-				obj.simObj.AddSimulationData(StromaWiggleRatio());
+				obj.simObj.AddSimulationData(StromaWiggleRatio(obj.w));
 				obj.simObj.AddDataWriter(WriteStromaWiggleRatio(20,obj.simObj.pathName));
 			end
 

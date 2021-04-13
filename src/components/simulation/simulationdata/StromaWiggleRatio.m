@@ -6,12 +6,15 @@ classdef StromaWiggleRatio < AbstractSimulationData
 		name = 'stromaWiggleRatio'
 		data = 1;
 
+		w % The width of the stroma
+
 	end
 
 	methods
 
-		function obj = StromaWiggleRatio
-			% No special initialisation
+		function obj = StromaWiggleRatio(w)
+			
+			obj.w = w;
 			
 		end
 
@@ -34,7 +37,7 @@ classdef StromaWiggleRatio < AbstractSimulationData
 				end
 			end
 
-			if isemtpy(s)
+			if isempty(s)
 				error('Couldnt find stroma');
 			end
 
@@ -49,15 +52,7 @@ classdef StromaWiggleRatio < AbstractSimulationData
 
 			end
 
-
-			sd = t.simData('boundaryCells');
-			bcs = sd.GetData(t);
-			cl = bcs('left');
-			cr = bcs('right');
-
-			w = cr.nodeBottomRight.x - cl.nodeBottomLeft.x;
-
-			obj.data = len/w;
+			obj.data = len/obj.w;
 
 		end
 		
