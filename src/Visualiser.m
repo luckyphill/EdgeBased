@@ -449,22 +449,40 @@ classdef Visualiser < matlab.mixin.SetGet
 
 		function VisualiseRods(obj, r, varargin)
 
-			% This will take the formatted data and produces a video of a rod cell simulation
+			% varargin 
+			% Arg 1: [indexStart, indexEnd] - a vector of the start and ending indices. Leave empty to run the whole simulation
+			% Arg 2: plot axis range in the form [xmin,xmax,ymin,ymax]
+
+			xyrange = [];
+			indices = [];
+			if ~isempty(varargin)
+				indices = varargin{1};
+				if length(varargin) > 1
+					xyrange = varargin{2};
+				end
+			end
 
 			h = figure();
 			set(gca,'Color','k');
 			axis equal
 			hold on
 
+			if ~isempty(xyrange)
+				xlim(xyrange(1:2));
+				ylim(xyrange(3:4));
+			end
+
 			[I,~] = size(obj.cells);
 
 
 			% Initialise the array with anything
-			patchObjects(1) = patch([1,1],[2,2],obj.cs.GetRGB(6), 'LineWidth', .5);
+			patchObjects(1) = patch([1,1],[2,2],obj.cs.GetRGB(6), 'LineWidth', 0.5);
 
 			startI =  1;
-			if ~isempty(varargin)
-				startI = varargin{1};
+			endI = I;
+			if ~isempty(indices)
+				startI = indices(1);
+				endI = indices(2);
 			end
 
 			for i = startI:I

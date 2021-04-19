@@ -159,7 +159,7 @@ classdef (Abstract) SimulationDriver < matlab.mixin.SetGet
 					data = obj.outputTypes{i}.loadData(obj);
 				catch err
 					data = nan;
-					fprintf('Problem loading data for %s:\n%s\n', obj.outputTypes{i}.name, err.message);
+					warning('sim:LoadFailure','Problem loading data for %s:\n%s\n', obj.outputTypes{i}.name, err.message);
 				end
 				obj.data = setfield(obj.data,obj.outputTypes{i}.name,data);
 			end

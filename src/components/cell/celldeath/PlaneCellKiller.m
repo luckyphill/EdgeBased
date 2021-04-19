@@ -1,4 +1,4 @@
-classdef PlaneCellKiller < AbstractTissueLevelCellKiller
+classdef PlaneCellKiller < AbstractCellKiller
 	% A class for killing Boundary cells.
 	% Specify a plane and a direction
 	% if the cell centre moves to the wrong side, then it is killed
@@ -22,13 +22,15 @@ classdef PlaneCellKiller < AbstractTissueLevelCellKiller
 
 		end
 
-		function KillCells(obj, t)
+		function killList = MakeKillList(obj, cellList)
 
-			for i = length(t.cellList):-1:1
-				c = t.cellList(i);
+			killList = AbstractCell.empty();
+
+			for i = 1:length(cellList)
+				c = cellList(i);
 				if obj.IsCellPastPlane(c)
-					% Kill the cell
-					RemoveCellFromSimulation(obj, t, c);
+					% add to the list
+					killList(end + 1) = c;
 				end
 
 			end
@@ -49,56 +51,6 @@ classdef PlaneCellKiller < AbstractTissueLevelCellKiller
 
 		end
 
-		function RemoveCellFromSimulation(obj, t, c)
-
-			
-			% Clean up elements
-
-			for i = 1:length(c.elementList)
-
-				t.elementList(t.elementList == c.elementList(i)) = [];
-				if t.usingBoxes
-					% Shouldn't be handling this in the killer, but its here for now
-					% because we need to remove the element from th partition before
-					% it gets deleted
-					t.boxes.RemoveElementFromPartition(c.elementList(i));
-				end
-
-				c.elementList(i).delete;
-
-			end
-
-			for i = 1:length(c.nodeList)
-
-				t.nodeList(t.nodeList == c.nodeList(i)) = [];
-				if t.usingBoxes
-					t.boxes.RemoveNodeFromPartition(c.nodeList(i));
-				end
-				c.nodeList(i).delete;
-
-			end
-
-
-			% Clean up cell
-
-			% Since the cell List for the tissue is heterogeneous, we can't use
-			% t.cellList(t.cellList == c) = []; to delete the cell because 
-			% "one or more inputs of class 'AbstractCell' are heterogeneous
-			% and 'eq' is not sealed". I have no idea what this means, but
-			% it is a quirk of matlab OOP we have to work around
-			for i = length(t.cellList)
-				oc = t.cellList(i);
-
-				if oc == c
-					t.cellList(i) = [];
-					break;
-				end
-
-			end
-
-			c.delete;
-
-		end
 
 	end
 

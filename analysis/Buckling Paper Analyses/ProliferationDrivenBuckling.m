@@ -9,8 +9,8 @@ classdef ProliferationDrivenBuckling < Analysis
 
 		% STATIC: DO NOT CHANGE
 		% IF CHANGE IS NEEDED, MAKE A NEW OBJECT
-		p = 5:.5:15;
-		g = 5:.5:15;
+		p = 5:.5:12;
+		g = 5:.5:12;
 
 		w = 10;
 
@@ -19,7 +19,7 @@ classdef ProliferationDrivenBuckling < Analysis
 		b = 10;
 
 		sae = 10;
-		spe = 15;
+		spe = 10;
 
 		seed = 1:50;
 
@@ -148,83 +148,86 @@ classdef ProliferationDrivenBuckling < Analysis
 
 		function PlotData(obj)
 
-			for spe = obj.spe
+			buckleOutcome = obj.result{1};
+			buckleTime = obj.result{2};
 
-
-				h = figure;
-
-				Lidx = obj.parameterSet(:,7) == spe;
-				dataP = obj.result(Lidx,1);
-				dataT = obj.result(Lidx,2);
-
-				params = obj.parameterSet(Lidx,[2,3]);
-
-				scatter(params(:,2), params(:,1), 100, dataP,'filled');
-				ylabel('Pause','Interpreter', 'latex', 'FontSize', 15);xlabel('Grow','Interpreter', 'latex', 'FontSize', 15);
-				title(sprintf('Proportion buckled, spe=%d', spe),'Interpreter', 'latex', 'FontSize', 22);
-				ylim([4.5 13.5]);xlim([4.5 12.5]);
-				colorbar; caxis([0 1]);
-				colormap jet;
-				ax = gca;
-				c = ax.Color;
-				ax.Color = 'black';
-				set(h, 'InvertHardcopy', 'off')
-				set(h,'color','w');
-
-				SavePlot(obj, h, sprintf('PhaseTestProp_spe%d',spe));
-
-				h = figure;
-				scatter(params(:,2), params(:,1), 100, dataT,'filled');
-				ylabel('Pause','Interpreter', 'latex', 'FontSize', 15);xlabel('Grow','Interpreter', 'latex', 'FontSize', 15);
-				title(sprintf('Tipping point, p=%g, g=%g',p,g),'Interpreter', 'latex', 'FontSize', 22);
-				ylim([1 41]);xlim([1.5 15.5]);
-				colorbar; caxis([1 1.1]);
-				colormap jet;
-				ax = gca;
-				c = ax.Color;
-				ax.Color = 'black';
-				set(h, 'InvertHardcopy', 'off')
-				set(h,'color','w');
-
-				SavePlot(obj, h, sprintf('PhaseTestTip_spe%d',spe));
-
-			end
+			spe = obj.spe;
 
 			h = figure;
-			leg = {};
-			for spe = 5:5:20
-				leg{end+1} = sprintf('spe=%d',spe);
-				Lidx = obj.parameterSet(:,7) == spe;
-				data = obj.result(Lidx);
-				para = obj.parameterSet(Lidx,:);
 
-				Lidx = (data > 0.4);
+			data = nansum(buckleOutcome,2)./sum(~isnan(buckleOutcome),2);
+			% data = sum(~isnan(buckleOutcome),2);
 
-				data = data(Lidx);
-				para = para(Lidx,:);
+			params = obj.parameterSet(:,[2,3]);
 
-				Lidx = (data < 0.6);
-
-				data = data(Lidx);
-				para = para(Lidx,:);
-
-				x = para(:,3);
-				y = para(:,2);
-
-				hold on
-				% scatter(x,y,100,'filled');
-				% Perform a least squares regression
-				b = [ones(size(x)),x]\y;
-				p = b' * [ones(size(obj.g)); obj.g];
-				plot(obj.g,p,'LineWidth', 4)
-
-			end
-
+			scatter(params(:,2), params(:,1), 100, data,'filled');
 			ylabel('Pause','Interpreter', 'latex', 'FontSize', 15);xlabel('Grow','Interpreter', 'latex', 'FontSize', 15);
-			title(sprintf('Proportion buckled = 0.5'),'Interpreter', 'latex', 'FontSize', 22);
-			ylim([4.5 15.5]);xlim([4.5 15.5]);
-			legend(leg);
-			SavePlot(obj, h, sprintf('PhaseTestWaveFront_spe%d',spe));
+			title(sprintf('Proportion buckled, spe=%d', spe),'Interpreter', 'latex', 'FontSize', 22);
+			ylim([4.5 15.5]);
+			xlim([4.5 15.5]);
+			colorbar; 
+			caxis([0 1]);
+			colormap jet;
+			ax = gca;
+			c = ax.Color;
+			ax.Color = 'black';
+			set(h, 'InvertHardcopy', 'off')
+			set(h,'color','w');
+
+			SavePlot(obj, h, sprintf('PhaseTestProp_spe%d',spe));
+
+			% h = figure;
+			% scatter(params(:,2), params(:,1), 100, dataT,'filled');
+			% ylabel('Pause','Interpreter', 'latex', 'FontSize', 15);xlabel('Grow','Interpreter', 'latex', 'FontSize', 15);
+			% title(sprintf('Tipping point, p=%g, g=%g',p,g),'Interpreter', 'latex', 'FontSize', 22);
+			% ylim([1 41]);xlim([1.5 15.5]);
+			% colorbar; caxis([1 1.1]);
+			% colormap jet;
+			% ax = gca;
+			% c = ax.Color;
+			% ax.Color = 'black';
+			% set(h, 'InvertHardcopy', 'off')
+			% set(h,'color','w');
+
+			% SavePlot(obj, h, sprintf('PhaseTestTip_spe%d',spe));
+
+
+
+			% h = figure;
+			% leg = {};
+			% for spe = 5:5:20
+			% 	leg{end+1} = sprintf('spe=%d',spe);
+			% 	Lidx = obj.parameterSet(:,7) == spe;
+			% 	data = obj.result(Lidx);
+			% 	para = obj.parameterSet(Lidx,:);
+
+			% 	Lidx = (data > 0.4);
+
+			% 	data = data(Lidx);
+			% 	para = para(Lidx,:);
+
+			% 	Lidx = (data < 0.6);
+
+			% 	data = data(Lidx);
+			% 	para = para(Lidx,:);
+
+			% 	x = para(:,3);
+			% 	y = para(:,2);
+
+			% 	hold on
+			% 	% scatter(x,y,100,'filled');
+			% 	% Perform a least squares regression
+			% 	b = [ones(size(x)),x]\y;
+			% 	p = b' * [ones(size(obj.g)); obj.g];
+			% 	plot(obj.g,p,'LineWidth', 4)
+
+			% end
+
+			% ylabel('Pause','Interpreter', 'latex', 'FontSize', 15);xlabel('Grow','Interpreter', 'latex', 'FontSize', 15);
+			% title(sprintf('Proportion buckled = 0.5'),'Interpreter', 'latex', 'FontSize', 22);
+			% ylim([4.5 15.5]);xlim([4.5 15.5]);
+			% legend(leg);
+			% SavePlot(obj, h, sprintf('PhaseTestWaveFront_spe%d',spe));
 
 		end
 

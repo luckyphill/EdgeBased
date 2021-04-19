@@ -3,3 +3,6 @@
 SimulationOutput/*
 AnalysisOutput/*
 Images/*
+*_missing.txt
+*.mat
+failed.txt

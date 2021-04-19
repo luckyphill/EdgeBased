@@ -66,6 +66,16 @@ classdef RodCell < AbstractCell
 			obj.sisterCell = newCell;
 
 			newCell.ancestorId = obj.id;
+
+			% Transfer the cell data objects to the new cell
+			% This is a quick hack way to do it and it won't work if the
+			% classes become too complicated
+			keys = obj.cellData.keys;
+			for i=1:length(keys)
+				cellDataArray(i) = copy(obj.cellData(keys{i}));
+			end
+
+			newCell.AddCellData(cellDataArray);
 		
 		end
 

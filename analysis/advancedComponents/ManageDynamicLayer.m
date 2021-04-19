@@ -67,7 +67,9 @@ classdef ManageDynamicLayer < MatlabSimulation
 
 			obj.GenerateSaveLocation();
 
+			warning('off','sim:LoadFailure')
 			obj.LoadSimulationData();
+			warning('on','sim:LoadFailure')
 
 			% Only add the data types that are missing
 			if isnan(obj.data.bottomWiggleData)

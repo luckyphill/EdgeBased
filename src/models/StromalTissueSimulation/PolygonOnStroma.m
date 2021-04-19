@@ -60,13 +60,14 @@ classdef PolygonOnStroma < LineSimulation
 			leftBoundary = -0.25;
 			rightBoundary = 0.5 * N + 0.25;
 
-			kl = PlaneCellKiller([leftBoundary,0], [-1,0]);
-			kr = PlaneCellKiller([rightBoundary,0], [1,0]);
-			ka = PlaneCellKiller([0,0.7], [0,1]); % Dumb Anoikis killer
+			% Doesn't work
+			% kl = PlaneCellKiller([leftBoundary,0], [-1,0]);
+			% kr = PlaneCellKiller([rightBoundary,0], [1,0]);
+			% ka = PlaneCellKiller([0,0.7], [0,1]); % Dumb Anoikis killer
 
-			obj.AddTissueLevelKiller(kl);
-			obj.AddTissueLevelKiller(kr);
-			obj.AddTissueLevelKiller(ka);
+			% obj.AddTissueLevelKiller(kl);
+			% obj.AddTissueLevelKiller(kr);
+			% obj.AddTissueLevelKiller(ka);
 
 			%---------------------------------------------------
 			% Make all the cells
