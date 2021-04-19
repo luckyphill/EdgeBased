@@ -88,12 +88,13 @@ classdef BucklingModes < Analysis
 
 		function AssembleData(obj)
 
-			buckleThreshold = 1.05;
+			buckleThreshold = 1.1;
 
 			MakeParameterSet(obj);
 
 			buckleOutcome = [];
 			buckleTime = [];
+			stromaRatioAtBuckle = [];
 
 			for i = 1:length(obj.parameterSet)
 				s = obj.parameterSet(i,:);
@@ -117,14 +118,22 @@ classdef BucklingModes < Analysis
 						if max(a.data.bottomWiggleData) >= buckleThreshold
 							buckleOutcome(i,j) = true;
 							buckleTime(i,j) = find(a.data.bottomWiggleData >= buckleThreshold,1) * 20 * a.dt;
+							if ~isnan(a.data.stromaWiggleData)
+								stromaRatioAtBuckle(i,j) = a.data.stromaWiggleData(find(a.data.bottomWiggleData >= buckleThreshold,1));
+							else
+								stromaRatioAtBuckle(i,j) = nan;
+								obj.missingParameterSet(end + 1,:) =[w,p,g,b,f,sae,spe,j];
+							end
 						else
 							buckleOutcome(i,j) = false;
 							buckleTime(i,j) = obj.targetTime;
+							stromaRatioAtBuckle(i,j) = nan;
 						end
 					else
 						% In case the simulation fails for some reason
 						buckleOutcome(i,j) = nan;
 						buckleTime(i,j) = nan;
+						stromaRatioAtBuckle(i,j) = nan;
 
 						obj.missingParameterSet(end + 1,:) =[w,p,g,b,f,sae,spe,j];
 					end
@@ -136,7 +145,7 @@ classdef BucklingModes < Analysis
 			end
 
 
-			obj.result = {buckleOutcome, buckleTime};
+			obj.result = {buckleOutcome, buckleTime, stromaRatioAtBuckle};
 
 			if ~isempty(obj.missingParameterSet)
 
@@ -153,7 +162,8 @@ classdef BucklingModes < Analysis
 
 			h = figure;
 
-			data = nansum(buckleOutcome,2)./sum(~isnan(buckleOutcome),2);
+			% data = nansum(buckleOutcome,2)./sum(~isnan(buckleOutcome),2);
+			data = nanmean(buckleOutcome,2);
 
 			scatter(obj.parameterSet(:,7), obj.parameterSet(:,4), 100, data,'filled');
 			ylabel('Adhesion parameter','Interpreter', 'latex', 'FontSize', 15);
@@ -170,6 +180,29 @@ classdef BucklingModes < Analysis
 			set(h,'color','w');
 
 			SavePlot(obj, h, sprintf('PerimVSAdhesion'));
+
+
+			stromaRatioAtBuckle = obj.result{3};
+
+			h = figure;
+
+			data = nanmean(stromaRatioAtBuckle,2);
+
+			scatter(obj.parameterSet(:,7), obj.parameterSet(:,4), 100, data,'filled');
+			ylabel('Adhesion parameter','Interpreter', 'latex', 'FontSize', 15);
+			xlabel('Perimeter energy parameter','Interpreter', 'latex', 'FontSize', 15);
+			title(sprintf('Average stroma ratio at buckle, p=%g, g=%g',obj.p,obj.g),'Interpreter', 'latex', 'FontSize', 22);
+			ylim([min(obj.b)-1, max(obj.b)+1]);
+			xlim([min(obj.spe)-1, max(obj.spe)+1]);
+			colorbar; caxis([0 1]);
+			colormap jet;
+			ax = gca;
+			c = ax.Color;
+			ax.Color = 'black';
+			set(h, 'InvertHardcopy', 'off')
+			set(h,'color','w');
+
+			SavePlot(obj, h, sprintf('BucklingMode'));
 
 
 
