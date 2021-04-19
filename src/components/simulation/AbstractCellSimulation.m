@@ -479,12 +479,79 @@ classdef (Abstract) AbstractCellSimulation < matlab.mixin.SetGet
 
 			% Loop through the cell killers
 
+			% Currently the two killer types work differently.
+			% This is for backward compatibility with a hack job that
+			% I still need to work right now
+			% Note to self, after all your work with DynamicLayer is done
+			% take some time to fix this up for SquareCellJoined
+
 			for i = 1:length(obj.tissueLevelKillers)
 				obj.tissueLevelKillers(i).KillCells(obj);
 			end
 
+			killList = AbstractCell.empty();
 			for i = 1:length(obj.cellKillers)
-				obj.cellKillers(i).KillCells(obj.cellList);
+				killList = [killList, obj.cellKillers(i).MakeKillList(obj.cellList)];
+			end
+
+			obj.ProcessCellsToRemove(killList);
+
+		end
+
+		function ProcessCellsToRemove(obj, killList)
+
+			% Loop from the end because we're removing cells from a list
+			for i = length(killList):-1:1
+
+				c = killList(i);
+
+				% Do all the clean up
+
+				% Need a separate way to handle joined cells
+
+				% Clean up elements
+
+				for j = 1:length(c.elementList)
+
+					obj.elementList(obj.elementList == c.elementList(j)) = [];
+					if obj.usingBoxes
+						obj.boxes.RemoveElementFromPartition(c.elementList(j));
+					end
+
+					c.elementList(j).delete;
+
+				end
+
+				for j = 1:length(c.nodeList)
+
+					obj.nodeList(obj.nodeList == c.nodeList(j)) = [];
+					if obj.usingBoxes
+						obj.boxes.RemoveNodeFromPartition(c.nodeList(j));
+					end
+					c.nodeList(j).delete;
+
+				end
+
+				% Clean up Cell
+
+				% Since the cell List for the tissue is heterogeneous, we can't use
+				% obj.cellList(obj.cellList == c) = []; to delete the cell because 
+				% "one or more inputs of class 'AbstractCell' are heterogeneous
+				% and 'eq' is not sealed". I have no idea what this means, but
+				% it is a quirk of matlab OOP we have to work around
+				for j = 1:length(obj.cellList)
+					oc = obj.cellList(j);
+
+					if oc == c
+						obj.cellList(j) = [];
+						break;
+					end
+
+				end
+				
+
+				c.delete;
+
 			end
 
 		end
@@ -573,7 +640,7 @@ classdef (Abstract) AbstractCellSimulation < matlab.mixin.SetGet
 			h = figure();
 			hold on
 			% r is rod "radius"
-			% r = 0.08; % The width of the rods
+
 			patchObjects(length(obj.cellList)) = patch([1,1],[2,2],1, 'LineWidth', 2);
 
 			for i = 1:length(obj.cellList)
