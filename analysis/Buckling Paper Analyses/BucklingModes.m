@@ -119,7 +119,11 @@ classdef BucklingModes < Analysis
 							buckleOutcome(i,j) = true;
 							buckleTime(i,j) = find(a.data.bottomWiggleData >= buckleThreshold,1) * 20 * a.dt;
 							if ~isnan(a.data.stromaWiggleData)
-								stromaRatioAtBuckle(i,j) = a.data.stromaWiggleData(find(a.data.bottomWiggleData >= buckleThreshold,1));
+								% This should always be at the same index when finding the buckleTime
+								% But there might be a difference if the data was generated separately to
+								% buckleWiggleData. Not sure how this will impact the analysis, but it should
+								% not be much unless there are major problems
+								stromaRatioAtBuckle(i,j) = a.data.stromaWiggleData(end);
 							else
 								stromaRatioAtBuckle(i,j) = nan;
 								obj.missingParameterSet(end + 1,:) =[w,p,g,b,f,sae,spe,j];
