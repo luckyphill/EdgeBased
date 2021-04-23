@@ -198,7 +198,7 @@ classdef BucklingModes < Analysis
 			title(sprintf('Average stroma ratio at buckle, p=%g, g=%g',obj.p,obj.g),'Interpreter', 'latex', 'FontSize', 22);
 			ylim([min(obj.b)-1, max(obj.b)+1]);
 			xlim([min(obj.spe)-1, max(obj.spe)+1]);
-			colorbar; caxis([0 1]);
+			colorbar; caxis([1 1.05]);
 			colormap jet;
 			ax = gca;
 			c = ax.Color;

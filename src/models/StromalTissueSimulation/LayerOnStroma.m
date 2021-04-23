@@ -107,7 +107,7 @@ classdef LayerOnStroma < LineSimulation
 
 			fadeTime = 3;
 
-			c.AddCellData(TargetPerimeterSquareControlled(fadeTime));
+			% c.AddCellData(TargetPerimeterSquareControlled(fadeTime));
 			% c.AddCellData(TargetAreaDivision());
 			% c.AddCellData(TargetPerimeterDivision());
 
@@ -140,7 +140,7 @@ classdef LayerOnStroma < LineSimulation
 				c.cellType = epiCellType;
 				obj.cellList(end + 1) = c;
 
-				c.AddCellData(TargetPerimeterSquareControlled(fadeTime));
+				% c.AddCellData(TargetPerimeterSquareControlled(fadeTime));
 				% c.AddCellData(TargetAreaDivision());
 				% c.AddCellData(TargetPerimeterDivision());
 
@@ -230,7 +230,7 @@ classdef LayerOnStroma < LineSimulation
 			% A modifier to help with the pinching issue
 			%---------------------------------------------------
 
-			obj.AddSimulationModifier(DivisionHack(1));
+			% obj.AddSimulationModifier(DivisionHack(1));
 
 
 			%---------------------------------------------------
@@ -241,7 +241,7 @@ classdef LayerOnStroma < LineSimulation
 			obj.pathName = sprintf('LayerOnStroma/n%gp%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%g_seed%g/',N,p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, seed);
 
 			obj.AddSimulationData(SpatialState());
-			obj.AddDataWriter(WriteSpatialState(100,obj.pathName));
+			obj.AddDataWriter(WriteSpatialState(10,obj.pathName));
 			obj.AddSimulationData(TrackCellGeometry());
 			obj.AddDataWriter(WriteCellGeometry(10,obj.pathName));
 

@@ -1,4 +1,4 @@
-classdef ProliferationDrivenBuckling < Analysis
+classdef ExtendedProliferationDrivenBuckling < Analysis
 
 	properties
 
@@ -19,13 +19,13 @@ classdef ProliferationDrivenBuckling < Analysis
 		b = 10;
 
 		sae = 10;
-		spe = 10;
+		spe = [4,6,8,12];
 
 		seed = 1:50;
 
 		targetTime = 500;
 
-		analysisName = 'ProliferationDrivenBuckling';
+		analysisName = 'ExtendedProliferationDrivenBuckling';
 
 		parameterSet = []
 		missingParameterSet = []
@@ -40,7 +40,7 @@ classdef ProliferationDrivenBuckling < Analysis
 
 	methods
 
-		function obj = ProliferationDrivenBuckling()
+		function obj = ExtendedProliferationDrivenBuckling()
 
 			obj.seedIsInParameterSet = false; % The seed not given in MakeParameterSet, it is set in properties
 			obj.seedHandledByScript = false; % The seed will be in the parameter file, not the job script
