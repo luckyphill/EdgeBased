@@ -170,7 +170,10 @@ classdef LayerOnFlat < LineSimulation
 			% A modifier to help with the pinching issue
 			%---------------------------------------------------
 
-			obj.AddSimulationModifier(DivisionHack(1));
+			divisionHackOn = true;
+			if divisionHackOn
+				obj.AddSimulationModifier(DivisionHack(1));
+			end
 
 
 			%---------------------------------------------------
@@ -178,7 +181,7 @@ classdef LayerOnFlat < LineSimulation
 			%---------------------------------------------------
 
 			
-			obj.pathName = sprintf('LayerOnFlat/n%gp%gg%gb%gf%gda%gds%gdl%galpha%gbeta%gt%gan%gag%gpn%gpg%g_seed%g/',N,p,g,b,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, newArea, grownArea, newPerimeter, grownPrimeter, seed);
+			obj.pathName = sprintf('LayerOnFlat/n%gp%gg%gb%gf%gda%gds%gdl%galpha%gbeta%gt%gan%gag%gpn%gpg%ghack%d_seed%g/',N,p,g,b,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, newArea, grownArea, newPerimeter, grownPrimeter, divisionHackOn, seed);
 
 			obj.AddSimulationData(SpatialState());
 			obj.AddDataWriter(WriteSpatialState(100,obj.pathName));

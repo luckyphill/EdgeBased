@@ -10,7 +10,8 @@ classdef FlatAreaAnalysis < Analysis
 		an
 		pn
 		ag
-		pg  
+		pg
+		hack  
 
 		seed
 
@@ -28,7 +29,7 @@ classdef FlatAreaAnalysis < Analysis
 
 	methods
 
-		function obj = FlatAreaAnalysis(n, p, g, b, f, an, ag, pn, pg, seed)
+		function obj = FlatAreaAnalysis(n, p, g, b, f, an, ag, pn, pg, hack, seed)
 
 			% Each seed runs in a separate job
 			obj.seedIsInParameterSet = false; % The seed not given in MakeParameterSet, it is set in properties
@@ -43,9 +44,10 @@ classdef FlatAreaAnalysis < Analysis
 			obj.pn = pn;
 			obj.ag = ag;
 			obj.pg = pg;
+			obj.hack = hack;
 
 			obj.seed = seed;
-			obj.analysisName = sprintf('LayerOnFlat/n%gp%gg%gb%gf%gda0ds0.1dl0.2alpha20beta10t0an%gag%gpn%gpg%g_seed%g/',n,p,g,b,f,an,ag,pn,pg, seed);
+			obj.analysisName = sprintf('FlatAreaAnalysis/n%gp%gg%gb%gf%gda0ds0.1dl0.2alpha20beta10t0an%gag%gpn%gpg%ghack%g_seed%g/',n,p,g,b,f,an,ag,pn,pg, hack, seed);
 
 		end
 
@@ -60,7 +62,9 @@ classdef FlatAreaAnalysis < Analysis
 		function AssembleData(obj)
 
 			homeDir = getenv('EDGEDIR');
-			geoData = dlmread([homeDir, '/SimulationOutput/', obj.analysisName, 'CellGeometry.csv']);
+
+			driverLocation = sprintf('LayerOnFlat/n%gp%gg%gb%gf%gda0ds0.1dl0.2alpha20beta10t0an%gag%gpn%gpg%ghack%g_seed%g/',obj.n,obj.p,obj.g,obj.b,obj.f,obj.an,obj.ag,obj.pn,obj.pg,obj.hack,obj.seed);
+			geoData = dlmread([homeDir, '/SimulationOutput/', driverLocation, 'CellGeometry.csv']);
 
 			geoData(geoData==0) = NaN;
 
@@ -186,14 +190,14 @@ classdef FlatAreaAnalysis < Analysis
 			SavePlot(obj, h, sprintf('PerimeterByTime'));
 
 
-			h = figure;
-			scatter3(areas(:),perims(:),ages(:),[],ages(:));
-			xlabel('Area','Interpreter', 'latex', 'FontSize', fontSize);
-			ylabel('Perimeter','Interpreter', 'latex', 'FontSize', fontSize);
-			zlabel('Age (hr)','Interpreter', 'latex', 'FontSize', fontSize);
-			colorbar
-			% ylim([2.6,4.2]);
-			SavePlot(obj, h, sprintf('AreaVSPerimeter'));
+			% h = figure;
+			% scatter3(areas(:),perims(:),ages(:),[],ages(:));
+			% xlabel('Area','Interpreter', 'latex', 'FontSize', fontSize);
+			% ylabel('Perimeter','Interpreter', 'latex', 'FontSize', fontSize);
+			% zlabel('Age (hr)','Interpreter', 'latex', 'FontSize', fontSize);
+			% colorbar
+			% % ylim([2.6,4.2]);
+			% SavePlot(obj, h, sprintf('AreaVSPerimeter'));
 
 
 			mL = nanmean(areas);
@@ -213,11 +217,11 @@ classdef FlatAreaAnalysis < Analysis
 			fill([bT,fliplr(uT)], [bL,fliplr(uL)], [0, .45, 0.74], 'FaceAlpha', 0.25, 'EdgeAlpha',0);
 			ax = gca;
 			ax.FontSize = 16;
+			xlim([-0.3, 25]);
 			ylim([0.3,1]);
-			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', fontSize);
-			ylabel('Area','Interpreter', 'latex', 'FontSize', fontSize);
-			% title('Average length over time','Interpreter', 'latex','FontSize', 22);
-			% ylabel('Avg. length ($\mu$m)','Interpreter', 'latex', 'FontSize', 40);xlabel('Time (min)','Interpreter', 'latex', 'FontSize', 40);
+			xlabel('Age (hr)','Interpreter', 'latex', 'FontSize', fontSize);
+			ylabel('Area (CD$^2$)','Interpreter', 'latex', 'FontSize', fontSize);
+			title('Average area by cell age','Interpreter', 'latex','FontSize', 22);
 
 			SavePlot(obj, h, sprintf('AverageAreaByAge'));
 
@@ -239,11 +243,11 @@ classdef FlatAreaAnalysis < Analysis
 			fill([bT,fliplr(uT)], [bL,fliplr(uL)], [0, .45, 0.74], 'FaceAlpha', 0.25, 'EdgeAlpha',0);
 			ax = gca;
 			ax.FontSize = 16;
+			xlim([-0.3, 25]);
 			ylim([2.6,4.2]);
-			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', fontSize);
-			ylabel('Perimeter','Interpreter', 'latex', 'FontSize', fontSize);
-			% title('Average length over time','Interpreter', 'latex','FontSize', 22);
-			% ylabel('Avg. length ($\mu$m)','Interpreter', 'latex', 'FontSize', 40);xlabel('Time (min)','Interpreter', 'latex', 'FontSize', 40);
+			xlabel('Age (hr)','Interpreter', 'latex', 'FontSize', fontSize);
+			ylabel('Perimeter (CD)','Interpreter', 'latex', 'FontSize', fontSize);
+			title('Average perimeter by cell age','Interpreter', 'latex','FontSize', 22);
 
 			SavePlot(obj, h, sprintf('AveragePerimeterByAge'));
 
