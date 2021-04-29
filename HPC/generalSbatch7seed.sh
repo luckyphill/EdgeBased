@@ -10,8 +10,11 @@
 simName=$1 
 paramFile=$2
 
-module load arch/haswell
-module load matlab
+# module load arch/haswell
+module load matlab/2020b
+
+# mkdir -p $TMPDIR/$SLURM_ARRAY_JOB_ID/$SLURM_ARRAY_TASK_ID/matlab
+# export MATLAB_PREFDIR=$SLURM_SUBMIT_DIR/$SLURM_ARRAY_JOB_ID/$SLURM_ARRAY_TASK_ID/matlab
 
 export EDGEDIR='/hpcfs/users/a1738927/Research/EdgeBased'
 
