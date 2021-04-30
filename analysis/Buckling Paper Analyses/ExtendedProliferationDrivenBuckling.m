@@ -151,30 +151,36 @@ classdef ExtendedProliferationDrivenBuckling < Analysis
 			buckleOutcome = obj.result{1};
 			buckleTime = obj.result{2};
 
-			spe = obj.spe;
+			for spe = obj.spe;
 
-			h = figure;
+				h = figure;
 
-			data = nansum(buckleOutcome,2)./sum(~isnan(buckleOutcome),2);
-			% data = sum(~isnan(buckleOutcome),2);
+				idx = obj.parameterSet(:,7) == spe;
 
-			params = obj.parameterSet(:,[2,3]);
+				d = buckleOutcome(idx,:);
 
-			scatter(params(:,2), params(:,1), 100, data,'filled');
-			ylabel('Pause','Interpreter', 'latex', 'FontSize', 15);xlabel('Grow','Interpreter', 'latex', 'FontSize', 15);
-			title(sprintf('Proportion buckled, spe=%d', spe),'Interpreter', 'latex', 'FontSize', 22);
-			ylim([4.5 12.5]);
-			xlim([4.5 12.5]);
-			colorbar; 
-			caxis([0 1]);
-			colormap jet;
-			ax = gca;
-			c = ax.Color;
-			ax.Color = 'black';
-			set(h, 'InvertHardcopy', 'off')
-			set(h,'color','w');
+				data = nansum(d,2)./sum(~isnan(d),2);
+				% data = sum(~isnan(d),2);
 
-			SavePlot(obj, h, sprintf('PhaseTestProp_spe%d',spe));
+				params = obj.parameterSet(idx,[2,3]);
+
+				scatter(params(:,2), params(:,1), 100, data,'filled');
+				ylabel('Pause','Interpreter', 'latex', 'FontSize', 15);xlabel('Grow','Interpreter', 'latex', 'FontSize', 15);
+				title(sprintf('Proportion buckled, spe=%d', spe),'Interpreter', 'latex', 'FontSize', 22);
+				ylim([4.5 12.5]);
+				xlim([4.5 12.5]);
+				colorbar; 
+				caxis([0 1]);
+				colormap jet;
+				ax = gca;
+				c = ax.Color;
+				ax.Color = 'black';
+				set(h, 'InvertHardcopy', 'off')
+				set(h,'color','w');
+
+				SavePlot(obj, h, sprintf('PhaseTestProp_spe%d',spe));
+
+			end
 
 			% h = figure;
 			% scatter(params(:,2), params(:,1), 100, dataT,'filled');
