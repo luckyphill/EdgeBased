@@ -79,6 +79,11 @@ classdef SpheroidProfilingAnalysis < Analysis
 			s = Spheroid(obj.t0, obj.tg, obj.s, obj.sreg, obj.seed);
 			s.dt = 0.002;
 
+			% Helps to speed things up to make them a little more standardised
+			% This way it doesn't out put the spatial state
+			remove(s.simData,'spatialState');
+			s.dataWriters = AbstractDataWriter.empty();
+
 			t_end = 200;
 			run_dt = 1;
 
@@ -87,9 +92,12 @@ classdef SpheroidProfilingAnalysis < Analysis
 			edge_count = [];
 			cell_count = [];
 
+			time_points = run_dt:run_dt:t_end;
+
+
 			tic;
 
-			for t = run_dt:run_dt:t_end
+			for t = time_points
 				s.RunToTime(t);
 				run_time(end+1) = toc;
 				node_count(end+1) = length(s.nodeList);
@@ -97,7 +105,7 @@ classdef SpheroidProfilingAnalysis < Analysis
 				cell_count(end+1) = length(s.cellList);
 			end
 
-			obj.result = {run_time, node_count, edge_count, cell_count, run_dt:run_dt:t_end};
+			obj.result = {run_time, node_count, edge_count, cell_count, time_points};
 
 		end
 
