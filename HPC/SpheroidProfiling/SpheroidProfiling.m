@@ -1,8 +1,9 @@
 
 s = Spheroid(10, 10, 10, 5, 111);
+s.dt = 0.002;
 
 t_end = 200;
-dt = 5;
+dt = 1;
 
 run_time = [];
 node_count = [];
