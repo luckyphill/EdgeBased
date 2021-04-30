@@ -79,8 +79,7 @@ classdef SpheroidProfilingAnalysis < Analysis
 			s = Spheroid(obj.t0, obj.tg, obj.s, obj.sreg, obj.seed);
 			s.dt = 0.002;
 
-			% Helps to speed things up to make them a little more standardised
-			% This way it doesn't out put the spatial state
+			% Stop any file output, we don't want to measure that
 			remove(s.simData,'spatialState');
 			s.dataWriters = AbstractDataWriter.empty();
 
