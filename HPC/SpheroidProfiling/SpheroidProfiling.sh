@@ -10,6 +10,6 @@
 
 module load matlab/2020b
 
-echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath(pwd)); SpheroidProfiling; quit()"
-matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath(pwd)); SpheroidProfiling; quit()"
+echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath(pwd)); obj = SpheroidProfilingAnalysis(10, 10, 10, 5, 111); AssembleData(obj); obj.PlotData; quit()"
+matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath(pwd)); obj = SpheroidProfilingAnalysis(10, 10, 10, 5, 111); AssembleData(obj); obj.PlotData; quit()"
 

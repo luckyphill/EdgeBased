@@ -60,17 +60,44 @@ classdef SpheroidProfilingAnalysis < Analysis
 
 			% Just need to load the time series as in the visaliser
 
-			fileName = sprintf('%s/HPC/SpheroidProfiling/result.mat',getenv('EDGEDIR'));
-			load(fileName);
+			% fileName = sprintf('%s/HPC/SpheroidProfiling/result.mat',getenv('EDGEDIR'));
+			% load(fileName);
 
-			run_time = result{1};
-			node_count = result{2};
-			edge_count = result{3};
-			cell_count = result{4};
+			% run_time = result{1};
+			% node_count = result{2};
+			% edge_count = result{3};
+			% cell_count = result{4};
 
-			% A bit redundant, but helps keep things standardised
-			% especially for saving and loading
-			obj.result = {run_time, node_count, edge_count, cell_count};
+			% % A bit redundant, but helps keep things standardised
+			% % especially for saving and loading
+			% obj.result = {run_time, node_count, edge_count, cell_count};
+
+
+			% Trying out something new - using assemble data to run th simulation
+			% maybe there's a better way in general, but this should do the trick
+
+			s = Spheroid(obj.t0, obj.tg, obj.s, obj.sreg, obj.seed);
+			s.dt = 0.002;
+
+			t_end = 200;
+			run_dt = 1;
+
+			run_time = [];
+			node_count = [];
+			edge_count = [];
+			cell_count = [];
+
+			tic;
+
+			for t = run_dt:run_dt:t_end
+				s.RunToTime(t);
+				run_time(end+1) = toc;
+				node_count(end+1) = length(s.nodeList);
+				edge_count(end+1) = length(s.elementList);
+				cell_count(end+1) = length(s.cellList);
+			end
+
+			obj.result = {run_time, node_count, edge_count, cell_count, run_dt:run_dt:t_end};
 
 		end
 
@@ -82,8 +109,48 @@ classdef SpheroidProfilingAnalysis < Analysis
 			cell_count = obj.result{4};
 
 
-			dt = run_time(2:end) - run_time(1:end-1):
+			t = obj.result{5};
 			
+
+			h = figure;
+
+			tFontSize = 40;
+			lFontSize = 30;
+			aFontSize = 24;
+
+			h = figure;
+			plot(t, run_time, 'LineWidth', 4);
+			ax = gca;
+			ax.FontSize = aFontSize;
+			title('Cumulative running time as simulation progresses','Interpreter', 'latex','FontSize', tFontSize);
+			xlabel('Simulation Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylabel('Running Time (s)','Interpreter', 'latex', 'FontSize', lFontSize);
+			SavePlot(obj, h, sprintf('CumTimeVsTime'));
+
+
+			dt = [run_time(1), run_time(2:end) - run_time(1:end-1)];
+
+			h = figure;
+			plot(t,  dt, 'LineWidth', 4);
+			ax = gca;
+			ax.FontSize = aFontSize;
+			title('Running time between time steps','Interpreter', 'latex','FontSize', tFontSize);
+			xlabel('Simulation Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylabel('Running Time (s)','Interpreter', 'latex', 'FontSize', lFontSize);
+			SavePlot(obj, h, sprintf('dtVsTime'));
+
+
+			% h = figure;
+
+			% data = dt./node_count;
+			% plot(data, t, 'LineWidth', 4);
+			% ax = gca;
+			% ax.FontSize = aFontSize;
+			% title('Running time between time steps','Interpreter', 'latex','FontSize', tFontSize);
+			% xlabel('Simulation Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
+			% ylabel('Running Time (s)','Interpreter', 'latex', 'FontSize', lFontSize);
+			% SavePlot(obj, h, sprintf('dtVsTime'));
+
 
 
 		end
