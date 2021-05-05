@@ -118,11 +118,11 @@ classdef SpheroidProfilingAnalysis < Analysis
 			cell_count = obj.result{4};
 			t = obj.result{5};
 
-			run_time = run_time(node_count < nLim);
-			node_count = node_count(node_count < nLim);
-			edge_count = edge_count(node_count < nLim);
-			cell_count = cell_count(node_count < nLim);
-			t = t(node_count < nLim);
+			% run_time = run_time(node_count < nLim);
+			% node_count = node_count(node_count < nLim);
+			% edge_count = edge_count(node_count < nLim);
+			% cell_count = cell_count(node_count < nLim);
+			% t = t(node_count < nLim);
 
 			h = figure;
 
