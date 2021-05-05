@@ -77,7 +77,7 @@ classdef SpheroidProfilingAnalysis < Analysis
 			% maybe there's a better way in general, but this should do the trick
 
 			s = Spheroid(obj.t0, obj.tg, obj.s, obj.sreg, obj.seed);
-			s.dt = 0.002;
+			s.dt = 0.005;
 
 			% Stop any file output, we don't want to measure that
 			remove(s.simData,'spatialState');
@@ -110,20 +110,25 @@ classdef SpheroidProfilingAnalysis < Analysis
 
 		function PlotData(obj)
 
+			nLim = 5500;
+
 			run_time = obj.result{1};
 			node_count = obj.result{2};
 			edge_count = obj.result{3};
 			cell_count = obj.result{4};
-
-
 			t = obj.result{5};
-			
+
+			run_time = run_time(node_count < nLim);
+			node_count = node_count(node_count < nLim);
+			edge_count = edge_count(node_count < nLim);
+			cell_count = cell_count(node_count < nLim);
+			t = t(node_count < nLim);
 
 			h = figure;
 
-			tFontSize = 40;
-			lFontSize = 30;
-			aFontSize = 24;
+			tFontSize = 20;
+			lFontSize = 20;
+			aFontSize = 14;
 
 			h = figure;
 			plot(t, run_time, 'LineWidth', 4);
@@ -143,20 +148,28 @@ classdef SpheroidProfilingAnalysis < Analysis
 			ax.FontSize = aFontSize;
 			title('Running time between time steps','Interpreter', 'latex','FontSize', tFontSize);
 			xlabel('Simulation Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
-			ylabel('Running Time (s)','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylabel('Time between steps (s)','Interpreter', 'latex', 'FontSize', lFontSize);
 			SavePlot(obj, h, sprintf('dtVsTime'));
 
 
-			% h = figure;
+			h = figure;
 
-			% data = dt./node_count;
-			% plot(data, t, 'LineWidth', 4);
-			% ax = gca;
-			% ax.FontSize = aFontSize;
-			% title('Running time between time steps','Interpreter', 'latex','FontSize', tFontSize);
-			% xlabel('Simulation Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
-			% ylabel('Running Time (s)','Interpreter', 'latex', 'FontSize', lFontSize);
-			% SavePlot(obj, h, sprintf('dtVsTime'));
+			b = [node_count;ones(size(dt))]' \ dt';
+
+			y = b(1) * node_count + b(2);
+
+			scatter(node_count, dt, 'LineWidth', 4);
+			hold on
+			plot(node_count, y, 'LineWidth', 1, 'DisplayName', sprintf('y = %.2fx + %.2f',b(1),b(2)));
+			leg = legend;
+			set(leg,'Location','best')
+
+			ax = gca;
+			ax.FontSize = aFontSize;
+			title('Running time between steps vs number of nodes','Interpreter', 'latex','FontSize', tFontSize);
+			xlabel('Node count','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylabel('Time between steps (s)','Interpreter', 'latex', 'FontSize', lFontSize);
+			SavePlot(obj, h, sprintf('dtVsNodes'));
 
 
 
