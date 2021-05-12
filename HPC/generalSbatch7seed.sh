@@ -16,7 +16,7 @@ module load matlab/2020b
 # mkdir -p $TMPDIR/$SLURM_ARRAY_JOB_ID/$SLURM_ARRAY_TASK_ID/matlab
 # export MATLAB_PREFDIR=$SLURM_SUBMIT_DIR/$SLURM_ARRAY_JOB_ID/$SLURM_ARRAY_TASK_ID/matlab
 
-export EDGEDIR='/hpcfs/users/a1738927/Research/EdgeBased'
+# export EDGEDIR='/hpcfs/users/a1738927/Research/EdgeBased'
 
 echo "array_job_index: $SLURM_ARRAY_TASK_ID"
 

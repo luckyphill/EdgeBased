@@ -10,10 +10,12 @@
 simName=$1 
 paramFile=$2
 
-module load arch/haswell
-module load matlab
+# module load arch/haswell
+# module load matlab
 
-export EDGEDIR='/hpcfs/users/a1738927/Research/EdgeBased'
+module load matlab/2020b
+
+# export EDGEDIR='/hpcfs/users/a1738927/Research/EdgeBased'
 
 echo "array_job_index: $SLURM_ARRAY_TASK_ID"
 
