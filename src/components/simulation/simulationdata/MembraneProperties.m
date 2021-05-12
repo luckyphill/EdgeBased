@@ -22,7 +22,7 @@ classdef MembraneProperties < AbstractSimulationData
 			% for instance TumourInMembrane
 			m = Membrane.empty();
 			for i = 1:length(t.cellList)
-				c = t.cellList(i)
+				c = t.cellList(i);
 				if isa(c, 'Membrane')
 					m = c;
 					break;
