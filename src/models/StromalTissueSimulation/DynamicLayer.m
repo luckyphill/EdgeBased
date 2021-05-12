@@ -197,9 +197,6 @@ classdef DynamicLayer < LineSimulation
 			% A special distinct force for the stroma
 			obj.AddCellBasedForce(StromaStructuralForce(stroma, sae, spe, 0));
 
-			% A force to keep the cell corners square - hopefully to stop node jumping after division
-			% obj.AddCellBasedForce(CornerForceCouple(cornerParameter,cornerAngle));
-
 			% Node-Element interaction force - requires a SpacePartition
 			% Handles different interaction strengths between different cell types
 			cellTypes = [epiCellType,stromalCellType];
