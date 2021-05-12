@@ -31,30 +31,34 @@ classdef NodeOnlyForce < AbstractNeighbourhoodBasedForce
 				for j = 1:length(neighbourList)
 					n2 = neighbourList(j);
 
-					if ~ismember(n2, doneList)
+					% Only want to apply this force if it's between NodeCells
+					if ( isa(n2.cellList, 'NodeCell') )
+						if ~ismember(n2, doneList)
 
-						n1ton2 = n2.position - n1.position;
+							n1ton2 = n2.position - n1.position;
 
-						x = norm(n1ton2);
+							x = norm(n1ton2);
 
-						v = n1ton2 / x;
+							v = n1ton2 / x;
 
 
-						if (0 < x) && ( x < obj.r)
+							if (0 < x) && ( x < obj.r)
 
-							Fa = obj.s * log(  obj.r / x   );
+								Fa = obj.s * log(  obj.r / x   );
+							end
+
+							if (obj.r <= x ) && ( x < 3*obj.r )
+
+								Fa = obj.s * (  ( obj.r - x ) / obj.r  ) * exp(5*(obj.r - x)/obj.r );
+
+							end
+
+							F1to2 = v * Fa;
+
+							n1.AddForceContribution(-F1to2);
+							n2.AddForceContribution(F1to2);
+
 						end
-
-						if (obj.r <= x ) && ( x < 3*obj.r )
-
-							Fa = obj.s * (  ( obj.r - x ) / obj.r  ) * exp(5*(obj.r - x)/obj.r );
-
-						end
-
-						F1to2 = v * Fa;
-
-						n1.AddForceContribution(-F1to2);
-						n2.AddForceContribution(F1to2);
 
 					end
 
