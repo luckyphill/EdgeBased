@@ -75,7 +75,7 @@ classdef CellTypeInteractionForce < AbstractNodeElementForce
 				obj.useInternalRepulsion = false;
 				obj.useNodeNodeInteractions = true;
 				asymp = da < 0;
-				if is sum(sum(asymp)) > 0
+				if sum(sum(asymp)) > 0
 					error("CTIF:overlap", "The force asymptote position allows overlap, which is not supported for rod cells\n");
 				end
 			end
@@ -111,6 +111,7 @@ classdef CellTypeInteractionForce < AbstractNodeElementForce
 					% The space partition efficiently finds the nodes and edges within
 					% the interaction limit (choose the maximum interaction limit)
 					[eList, nList] = p.GetNeighbouringNodesAndElements(n, max(obj.dLimit(cT1,:)) );
+
 				else
 					eList = p.GetNeighbouringElements(n, max(obj.dLimit(cT1,:)));
 					nList = Node.empty();
@@ -190,8 +191,8 @@ classdef CellTypeInteractionForce < AbstractNodeElementForce
 						v = nton1 / x;
 
 						% We need to determine the cell types interacting
-						cT1 = n.cellList(1).cellType;
-						cT2 = n1.cellList(1).cellType;
+						cT1 = find(obj.cellTypes == n.cellList(1).cellType);
+						cT2 = find(obj.cellTypes == n1.cellList(1).cellType);
 
 						sra = obj.springRateAttraction(cT1,cT2);
 						srr = obj.springRateRepulsion(cT1,cT2);
