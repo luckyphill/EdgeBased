@@ -25,8 +25,8 @@ classdef ManageTumourInMembrane < MatlabSimulation
 		
 
 		% These are solver parameters
-		t 	= 300	double {mustBeNonnegative}
-		dt 	= 0.002
+		t 	= 500
+		dt 	= 0.005
 
 		% This is the RNG seed parameter
 		rngSeed 	double {mustBeNumeric}
@@ -36,7 +36,7 @@ classdef ManageTumourInMembrane < MatlabSimulation
 	end
 
 	methods
-		function obj = ManageTumourInMembrane(radius, t0, tg, mpe, f, seed)
+		function obj = ManageTumourInMembrane(radius, t0, tg, mpe, f, dF, seed)
 
 			obj.r 		= radius;
 			obj.t0 		= t0;
@@ -48,14 +48,14 @@ classdef ManageTumourInMembrane < MatlabSimulation
 
 			
 
-			obj.simObj = TumourInMembrane(radius, t0, tg, mpe, f, seed);
+			obj.simObj = TumourInMembrane(radius, t0, tg, mpe, f, dF, seed);
 			obj.simObj.dt = obj.dt;
 			
 			% Remove the default spatial state output
 			remove(obj.simObj.simData,'spatialState');
 			obj.simObj.dataWriters = AbstractDataWriter.empty();
 
-			obj.outputTypes = {MembraneData(), CellCOuntData()};
+			obj.outputTypes = {MembraneData(), CellCountData()};
 
 			obj.GenerateSaveLocation();
 
