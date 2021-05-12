@@ -884,18 +884,286 @@ classdef Visualiser < matlab.mixin.SetGet
 
 		end
 
+		function VisualiseNodesAndEdges(obj, r, varargin)
+
+			% r is the radius of the node
+			% varargin 
+			% Arg 1: [indexStart, indexEnd] - a vector of the start and ending indices. Leave empty to run the whole simulation
+			% Arg 2: plot axis range in the form [xmin,xmax,ymin,ymax]
+
+			xyrange = [];
+			indices = [];
+			if ~isempty(varargin)
+				indices = varargin{1};
+				if length(varargin) > 1
+					xyrange = varargin{2};
+				end
+			end
+
+			h = figure();
+			axis equal
+			hold on
+
+			if ~isempty(xyrange)
+				xlim(xyrange(1:2));
+				ylim(xyrange(3:4));
+			end
+
+			[I,~] = size(obj.cells);
+
+
+			% Initialise the array with anything
+			patchObjects(1) = patch([1,1],[2,2],obj.cs.GetRGB(6), 'LineWidth', 0.5);
+			lineObjects(1)  = line([1,1],[2,2],'Color', 'k', 'LineWidth', 4);
+
+			startI =  1;
+			endI = I;
+			if ~isempty(indices)
+				startI = indices(1);
+				endI = indices(2);
+			end
+
+			for i = startI:endI
+				
+				% First draw node cells
+
+				[~,J] = size(obj.cells);
+				j = 1; % loops node cells
+				jN = 0; % tracks the number of node cells
+				jM = 0; % tracks the number of membrane 'cells'
+				while j <= J && ~isempty(obj.cells{i,j})
+
+					c = obj.cells{i,j};
+					ids = c(1:end-1);
+					colour = c(end);
+
+					% This should only for the node cells
+					if length(ids) < 2
+						jN = jN + 1;
+						a = squeeze(obj.nodes(ids,i,:))';
+
+						if jN > length(patchObjects)
+							[pillX,pillY] = obj.DrawPill(a,a,r);
+							patchObjects(jN) = patch(pillX,pillY,obj.cs.GetRGB(colour), 'LineWidth', .5);
+						else
+							[pillX,pillY] = obj.DrawPill(a,a,r);
+							patchObjects(jN).XData = pillX;
+							patchObjects(jN).YData = pillY;
+							patchObjects(jN).FaceColor = obj.cs.GetRGB(colour);
+						end
+
+					else
+
+						% Doesn't quite work for closed loops
+						% so need a little hack for now
+						jM = jM + 1;
+
+						nodeCoords = squeeze(obj.nodes(ids,i,:));
+						x = nodeCoords(:,1);
+						y = nodeCoords(:,2);
+
+						x(end+1) = x(1);
+						y(end+1) = y(1);
+
+						if jM > length(lineObjects)
+							lineObjects(jM) = line(x,y, 'Color', 'k', 'LineWidth', 4);
+						else
+							lineObjects(jM).XData = x;
+							lineObjects(jM).YData = y;
+						end
+
+					end
+
+
+					j = j + 1;
+
+				end
+				% j will always end up being 1 more than the total number of non empty cells
+
+				for k = length(patchObjects):-1:jN+1
+					patchObjects(k).delete;
+					patchObjects(k) = [];
+				end
+
+				for k = length(lineObjects):-1:jM+1
+					lineObjects(k).delete;
+					lineObjects(k) = [];
+				end
+
+				drawnow
+				title(sprintf('t = %g',obj.timeSteps(i)),'Interpreter', 'latex');
+				pause(0.1);
+
+			end
+
+		end
+
+		function ProduceNodesAndEdgesMovie(obj, r, varargin)
+
+
+			% varargin 
+			% Arg 1: [indexStart, indexEnd] - a vector of the start and ending indices
+			% Arg 2: plot axis range in the form [xmin,xmax,ymin,ymax]
+
+			xyrange = [];
+			indices = [];
+			videoFormat = 'MPEG-4';
+			if ~isempty(varargin)
+				indices = varargin{1};
+				if length(varargin) > 1
+					xyrange = varargin{2};
+					if length(varargin) > 2
+						videoFormat = varargin{3};
+					end
+				end
+			end
+
+			% Currently same as run visualiser, but saves the movie
+
+			h = figure();
+			axis equal
+			axis off
+			hold on
+
+			if ~isempty(xyrange)
+				xlim(xyrange(1:2));
+				ylim(xyrange(3:4));
+			end
+
+			if ~isempty(indices)
+				startI = indices(1);
+				endI = indices(2);
+			else
+				startI = 1;
+				endI = length(obj.timeSteps);
+			end
+
+			F = getframe(gca); % Initialise the array
+
+			% Initialise the array with anything
+			patchObjects(1) = patch([1,1],[2,2],obj.cs.GetRGB(6), 'LineWidth', 0.5);
+			lineObjects(1)  = line([1,1],[2,2],'Color', 'k', 'LineWidth', 4);
+
+
+			for i = startI:endI
+				
+				% First draw node cells
+
+				[~,J] = size(obj.cells);
+				j = 1; % loops node cells
+				jN = 0; % tracks the number of node cells
+				jM = 0; % tracks the number of membrane 'cells'
+				while j <= J && ~isempty(obj.cells{i,j})
+
+					c = obj.cells{i,j};
+					ids = c(1:end-1);
+					colour = c(end);
+
+					% This should only for the node cells
+					if length(ids) < 2
+						jN = jN + 1;
+						a = squeeze(obj.nodes(ids,i,:))';
+
+						if jN > length(patchObjects)
+							[pillX,pillY] = obj.DrawPill(a,a,r);
+							patchObjects(jN) = patch(pillX,pillY,obj.cs.GetRGB(colour), 'LineWidth', .5);
+						else
+							[pillX,pillY] = obj.DrawPill(a,a,r);
+							patchObjects(jN).XData = pillX;
+							patchObjects(jN).YData = pillY;
+							patchObjects(jN).FaceColor = obj.cs.GetRGB(colour);
+						end
+
+					else
+
+						% Doesn't quite work for closed loops
+						% so need a little hack for now
+						jM = jM + 1;
+
+						nodeCoords = squeeze(obj.nodes(ids,i,:));
+						x = nodeCoords(:,1);
+						y = nodeCoords(:,2);
+
+						x(end+1) = x(1);
+						y(end+1) = y(1);
+
+						if jM > length(lineObjects)
+							lineObjects(jM) = line(x,y, 'Color', 'k', 'LineWidth', 4);
+						else
+							lineObjects(jM).XData = x;
+							lineObjects(jM).YData = y;
+						end
+
+					end
+
+
+					j = j + 1;
+
+				end
+				% j will always end up being 1 more than the total number of non empty cells
+
+				for k = length(patchObjects):-1:jN+1
+					patchObjects(k).delete;
+					patchObjects(k) = [];
+				end
+
+				for k = length(lineObjects):-1:jM+1
+					lineObjects(k).delete;
+					lineObjects(k) = [];
+				end
+
+				drawnow
+				title(sprintf('t = %g',obj.timeSteps(i)),'Interpreter', 'latex');
+				F(end+1) = getframe(gca);
+
+			end
+
+
+			fileName = [obj.pathToOutput,'animation'];
+
+			if ~isempty(indices)
+				ts = obj.timeSteps(tIdxStart);
+				if tIdxStart == 1
+					ts = 0; % A little hack to make the numbers look nice, technically its lying
+				end
+				te = obj.timeSteps(tIdxEnd);
+				fileName = sprintf('%s_%gto%g',fileName, ts, te );
+			else
+				fileName = sprintf('%s_Full',fileName);
+			end
+
+			writerObj = VideoWriter(fileName,videoFormat);
+			writerObj.FrameRate = 10;
+
+			% open the video writer
+			open(writerObj);
+			% write the frames to the video
+			for i=2:length(F)
+				% convert the image to a frame
+				frame = F(i) ;    
+				writeVideo(writerObj, frame);
+			end
+			% close the writer object
+			close(writerObj);
+
+		end
+
+
 		function [pillX,pillY] = DrawPill(obj,a,b,r)
 
 			% Draws a pill shape where the centre of the circles are at
 			% a and b and the radius is r
 
-			 AtoB = b - a;
+			AtoB = b - a;
 			 
-			 normAtoB = [-AtoB(2), AtoB(1)];
+			normAtoB = [-AtoB(2), AtoB(1)];
 			 
-			 normAtoB = normAtoB / norm(normAtoB);
+			normAtoB = normAtoB / norm(normAtoB);
+			if isnan(normAtoB)
+				normAtoB = [1,0];
+			end
 			 
-			 R = r*normAtoB;
+			R = r*normAtoB;
 			% Make n equally spaced points around a circle starting from R
 			
 			n = 10;
