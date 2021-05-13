@@ -55,7 +55,7 @@ classdef ManageTumourInMembrane < MatlabSimulation
 			remove(obj.simObj.simData,'spatialState');
 			obj.simObj.dataWriters = AbstractDataWriter.empty();
 
-			obj.outputTypes = {MembraneData(), CellCountData()};
+			obj.outputTypes = {MembraneData(), CellCountData(), InnerRadiusData()};
 
 			obj.GenerateSaveLocation();
 
@@ -72,6 +72,11 @@ classdef ManageTumourInMembrane < MatlabSimulation
 			if isnan(obj.data.cellCountData)
 				obj.simObj.AddSimulationData(CellCount());
 				obj.simObj.AddDataWriter(WriteCellCount(20,obj.simObj.pathName));
+			end
+
+			if isnan(obj.data.innerRadiusData)
+				obj.simObj.AddSimulationData(InnerRadius());
+				obj.simObj.AddDataWriter(WriteInnerRadius(20,obj.simObj.pathName));
 			end
 
 		end
