@@ -1149,6 +1149,100 @@ classdef Visualiser < matlab.mixin.SetGet
 		end
 
 
+		function PlotNodesAndEdgesTimeStep(obj, r, timeStep, varargin)
+
+
+			xyrange = [];
+			plotTitle = '';
+
+			if ~isempty(varargin)
+				xyrange = varargin{1};
+				if length(varargin)>1
+					plotTitle = varargin{2};
+				end
+			end
+
+
+			h = figure();
+			axis equal
+			hold on
+
+			i = timeStep;
+
+			lineWidth = 0.5;
+			% Initialise the array with anything
+			patchObjects(1) = patch([1,1],[2,2],obj.cs.GetRGB(6), 'LineWidth', lineWidth);
+			lineObjects(1)  = line([1,1],[2,2],'Color', 'k', 'LineWidth', 4);
+
+
+
+			[~,J] = size(obj.cells);
+			j = 1; % loops node cells
+
+			while j <= J && ~isempty(obj.cells{i,j})
+
+				c = obj.cells{i,j};
+				ids = c(1:end-1);
+				colour = c(end);
+
+				% This should only for the node cells
+				if length(ids) < 2
+
+					a = squeeze(obj.nodes(ids,i,:))';
+
+					[pillX,pillY] = obj.DrawPill(a,a,r);
+					patchObjects(j) = patch(pillX,pillY,obj.cs.GetRGB(colour), 'LineWidth', .5);
+
+				else
+
+					nodeCoords = squeeze(obj.nodes(ids,i,:));
+					x = nodeCoords(:,1);
+					y = nodeCoords(:,2);
+
+					x(end+1) = x(1);
+					y(end+1) = y(1);
+
+					% This assumes only a single membrane exists
+					% to handle multiple membranes, change 1 to j
+					% but this will break the "bring to front command" uistack(lineObjects(1),'top')
+					lineObjects(1) = line(x,y, 'Color', 'k', 'LineWidth', 4);
+
+				end
+
+				j = j + 1;
+
+			end
+
+			uistack(lineObjects(1),'top');
+
+
+			if ~isempty(xyrange)
+				xlim(xyrange(1:2));
+				ylim(xyrange(3:4));
+			end
+			
+			% j will always end up being 1 more than the total number of non empty cells
+			axis off
+			drawnow
+			if ~isempty(plotTitle)
+				title(plotTitle,'Interpreter', 'latex', 'FontSize', 34);
+			else
+				title(sprintf('t = %g',obj.timeSteps(i)),'Interpreter', 'latex', 'FontSize', 34);
+			end
+
+			set(h,'Units','Inches');
+			pos = get(h,'Position');
+			set(h,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)]);
+			
+			fileName = sprintf('ImageAtTime_%g',obj.timeSteps(timeStep));
+			fileName = strrep(fileName,'.','_'); % If any time has decimals, change the point to underscore
+			fileName = sprintf('%s%s', obj.pathToOutput, fileName);
+			print(fileName,'-dpdf')
+
+
+		end
+
+
 		function [pillX,pillY] = DrawPill(obj,a,b,r)
 
 			% Draws a pill shape where the centre of the circles are at
