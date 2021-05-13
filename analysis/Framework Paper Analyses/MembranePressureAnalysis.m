@@ -13,7 +13,7 @@ classdef MembranePressureAnalysis < Analysis
 
 		dF = round(logspace(-1,2,16),2,'significant'); % Log steps from 0.1 to 100
 
-		seed = 1:10;
+		seed = 1;
 
 		analysisName = 'MembranePressureAnalysis';
 
