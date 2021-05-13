@@ -64,7 +64,7 @@ classdef ConstantRadialPressure < AbstractTissueBasedForce
 					n = c.nodeList;
 					r = n.position - centre;
 					rmag = norm(r);
-					loc(i, :) = [i, r, rmag];
+					loc(end + 1, :) = [i, r, rmag];
 
 					if rmag < 2*obj.radius
 						obj.tooClose = true;
@@ -75,11 +75,15 @@ classdef ConstantRadialPressure < AbstractTissueBasedForce
 
 			end
 
+			% A hack way of doing this to avoid duplicating efforts
+			iR = InnerRadius();
+			iR.SetData([nan,nan,nan]);
 			
 			if ~obj.tooClose
 
 				loc = sortrows(loc,3);
 
+				angLoc = []; % Store the angular location of the node, so we can order it
 
 				% We now have each node in order of its distance from the centre
 				% Starting from the closest node, calculate the angle it covers
@@ -105,6 +109,7 @@ classdef ConstantRadialPressure < AbstractTissueBasedForce
 						% Have to convert this to a full angle since asin doesn't have the full range
 						theta 		= (r(1) < 0) * sign(r(2)) * pi  + sign(r(1)) * theta;
 
+						angLoc(end + 1, :)		= [nid, theta, rmag];
 
 						dtheta 		= asin(  obj.radius / (2*rmag)  ); % Don't need to convert this because its in the range for asin
 						angBottom 	= theta - dtheta;
@@ -125,7 +130,9 @@ classdef ConstantRadialPressure < AbstractTissueBasedForce
 						force = obj.pressure * arcLength * r / rmag;
 
 						if ~isreal(force)
-							error('CRP:NotReal','Somehow the force is not real: theta %g + %g i', real(theta), imag(theta))
+							% Since we are using asin, if the argument doesn't fall within [-1,1] then it becomes imaginary
+							% This error historically occurred because AngleInterval didn't store pi to sufficient decimal places
+							error('CRP:NotReal','Somehow the force is not real: dtheta = %g + %g i', real(dtheta), imag(dtheta))
 						end
 
 						tissue.cellList(nid).nodeList.AddForceContribution(force);
@@ -135,6 +142,31 @@ classdef ConstantRadialPressure < AbstractTissueBasedForce
 					i = i + 1;
 
 				end
+
+				% The values in angLoc are only those that make up the inner ring 
+				angLoc = sortrows(angLoc,2);
+				innerNodes = [tissue.cellList(angLoc(:,1)).nodeList];
+
+				perimeter = 0;
+				for i = 1:length(innerNodes)-1
+					n1 = innerNodes(i);
+					n2 = innerNodes(i+1);
+					perimeter = perimeter + norm(n1.position - n2.position);
+				end
+
+				nPos = reshape([innerNodes.position],2,[])';
+				centre = mean(nPos);
+
+				avgRadius = mean(sqrt(sum((nPos - centre).^2,2)));
+
+				x = [innerNodes.x];
+				y = [innerNodes.y];
+				
+				intArea = polyarea(x,y);
+
+				iR.SetData([intArea, perimeter, avgRadius]);
+
+				tissue.AddSimulationData(iR);
 
 			end
 

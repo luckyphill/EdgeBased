@@ -163,9 +163,19 @@ classdef TumourInMembrane < AbstractCellSimulation
 			%---------------------------------------------------
 
 			obj.pathName = sprintf('TumourInMembrane/rad%gt0%gtg%gmpe%gf%gr%gaN%gaNM%gaM%gdA%gdSN%gdSNM%gdSM%gdLN%gdLNM%gdLM%gdF%gnEdges%g_seed%g/',radius,t0,tg,mpe,f,r,aN,aNM,aM,dA,dSN,dSNM,dSM,dLN,dLNM,dLM,dF,nEdges, seed);
+			
+			% A quick hack to make things easier for the analysis - needs to be better designed
+			obj.simulationOutputLocation = [getenv('EDGEDIR'),'/SimulationOutput/' obj.pathName];
 
 			obj.AddSimulationData(SpatialState());
 			obj.AddDataWriter(WriteSpatialState(20,obj.pathName));
+
+			% Inner radius data gets updated in ConstantRadialPressure, since its easiest to
+			% grab it there from data already calculated. This is pretty hacky right now
+			iR = InnerRadius();
+			iR.SetData([nan,nan,nan]);
+			obj.AddSimulationData(iR);
+			obj.AddDataWriter(WriteInnerRadius(20,obj.pathName));
 
 
 		end
