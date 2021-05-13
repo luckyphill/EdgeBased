@@ -40,7 +40,13 @@ classdef ConstantRadialPressure < AbstractTissueBasedForce
 		function CalculateAndAddForce(obj, tissue)
 
 			nPos = reshape([obj.membrane.nodeList.position],2,[])';
-			centre = mean(nPos);
+			
+			if tissue.step < 2
+				centre = mean(nPos);
+			else
+				centre = tissue.simData('innerRadius').data(4:5);
+			end
+
 
 
 			% For each node, find its distance from the centre,
@@ -77,7 +83,7 @@ classdef ConstantRadialPressure < AbstractTissueBasedForce
 
 			% A hack way of doing this to avoid duplicating efforts
 			iR = InnerRadius();
-			iR.SetData([nan,nan,nan]);
+			iR.SetData([nan,nan,nan,nan,nan]);
 			
 			if ~obj.tooClose
 
@@ -111,7 +117,7 @@ classdef ConstantRadialPressure < AbstractTissueBasedForce
 
 						angLoc(end + 1, :)		= [nid, theta, rmag];
 
-						dtheta 		= asin(  obj.radius / (2*rmag)  ); % Don't need to convert this because its in the range for asin
+						dtheta 		= asin(  obj.radius / rmag  ); % Don't need to convert this because its in the range for asin
 						angBottom 	= theta - dtheta;
 						angTop		= theta + dtheta;
 
@@ -132,7 +138,7 @@ classdef ConstantRadialPressure < AbstractTissueBasedForce
 						if ~isreal(force)
 							% Since we are using asin, if the argument doesn't fall within [-1,1] then it becomes imaginary
 							% This error historically occurred because AngleInterval didn't store pi to sufficient decimal places
-							error('CRP:NotReal','Somehow the force is not real: dtheta = %g + %g i', real(dtheta), imag(dtheta))
+							error('CRP:NotReal','Somehow the force is not real: dtheta = %g + %g i = asin( %g / %g )', real(dtheta), imag(dtheta), obj.radius, rmag);
 						end
 
 						tissue.cellList(nid).nodeList.AddForceContribution(force);
@@ -164,7 +170,7 @@ classdef ConstantRadialPressure < AbstractTissueBasedForce
 				
 				intArea = polyarea(x,y);
 
-				iR.SetData([intArea, perimeter, avgRadius]);
+				iR.SetData([intArea, perimeter, avgRadius, centre]);
 
 				tissue.AddSimulationData(iR);
 
