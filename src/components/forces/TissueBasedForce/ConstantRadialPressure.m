@@ -87,7 +87,8 @@ classdef ConstantRadialPressure < AbstractTissueBasedForce
 			
 			if ~obj.tooClose
 
-				loc = sortrows(loc,3);
+				% Sort the nodes in order of their distance from the centre
+				loc = sortrows(loc,4);
 
 				angLoc = []; % Store the angular location of the node, so we can order it
 
@@ -115,8 +116,6 @@ classdef ConstantRadialPressure < AbstractTissueBasedForce
 						% Have to convert this to a full angle since asin doesn't have the full range
 						theta 		= (r(1) < 0) * sign(r(2)) * pi  + sign(r(1)) * theta;
 
-						angLoc(end + 1, :)		= [nid, theta, rmag];
-
 						dtheta 		= asin(  obj.radius / rmag  ); % Don't need to convert this because its in the range for asin
 						angBottom 	= theta - dtheta;
 						angTop		= theta + dtheta;
@@ -133,9 +132,13 @@ classdef ConstantRadialPressure < AbstractTissueBasedForce
 
 						arcLength = rmag * angleCovered;
 
+						if angleCovered > 0
+							angLoc(end + 1, :)		= [nid, theta, rmag, angleCovered, arcLength];
+						end
+
 						force = obj.pressure * arcLength * r / rmag;
 
-						if ~isreal(force)
+						if ~isreal(force) || sum(isinf(force)) || sum(isnan(force))
 							% Since we are using asin, if the argument doesn't fall within [-1,1] then it becomes imaginary
 							% This error historically occurred because AngleInterval didn't store pi to sufficient decimal places
 							error('CRP:NotReal','Somehow the force is not real: dtheta = %g + %g i = asin( %g / %g )', real(dtheta), imag(dtheta), obj.radius, rmag);
@@ -160,14 +163,20 @@ classdef ConstantRadialPressure < AbstractTissueBasedForce
 					perimeter = perimeter + norm(n1.position - n2.position);
 				end
 
-				nPos = reshape([innerNodes.position],2,[])';
-				centre = mean(nPos);
+				x = [innerNodes.x];
+				y = [innerNodes.y];
+
+				nPos = [x',y'];
+				
+				maxX = max(x);
+				minX = min(x);
+				maxY = max(y);
+				minY = min(y);
+
+				centre = [mean([minX,maxX]), mean([minY,maxY])];
 
 				avgRadius = mean(sqrt(sum((nPos - centre).^2,2)));
 
-				x = [innerNodes.x];
-				y = [innerNodes.y];
-				
 				intArea = polyarea(x,y);
 
 				iR.SetData([intArea, perimeter, avgRadius, centre]);
@@ -175,6 +184,8 @@ classdef ConstantRadialPressure < AbstractTissueBasedForce
 				tissue.AddSimulationData(iR);
 
 			end
+
+			
 
 
 		end
