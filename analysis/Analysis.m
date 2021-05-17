@@ -262,7 +262,8 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 			% are required every time, this is not going to help you
 
 			params = [];
-			for i = 1:length(obj.parameterSet)
+			m = size(obj.parameterSet,1);
+			for i = 1:m
 				for seed = obj.seed
 					params(end+1,:) = [obj.parameterSet(i,:), seed];
 				end

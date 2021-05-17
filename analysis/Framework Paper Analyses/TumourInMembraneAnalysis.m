@@ -1,4 +1,4 @@
-classdef MembranePressureAnalysis < Analysis
+classdef TumourInMembraneAnalysis < Analysis
 	% Checks how varying the internal pressure affects things
 	properties
 
@@ -11,11 +11,11 @@ classdef MembranePressureAnalysis < Analysis
 
 		f = 0.9;
 
-		dF = 0.5; % Log steps from 0.1 to 100
+		dF = 0.5;
 
-		seed = 1;
+		seed = 1:10;
 
-		analysisName = 'MembranePressureAnalysis';
+		analysisName = 'TumourInMembraneAnalysis';
 
 		parameterSet = []
 
@@ -29,7 +29,7 @@ classdef MembranePressureAnalysis < Analysis
 
 	methods
 
-		function obj = MembranePressureAnalysis()
+		function obj = TumourInMembraneAnalysis()
 
 			obj.seedIsInParameterSet = false; % The seed not given in MakeParameterSet, it is set in properties
 			obj.seedHandledByScript = false; % The seed will be in the parameter file, not the job script
