@@ -93,6 +93,12 @@ classdef MembranePressureAnalysis < Analysis
 
 			h4 = figure;
 
+			h5 = figure;
+
+			tFontSize = 40;
+			lFontSize = 30;
+			aFontSize = 24;
+
 			for i = 1:size(obj.parameterSet,1)
 
 				params = obj.parameterSet(i,:);
@@ -144,10 +150,10 @@ classdef MembranePressureAnalysis < Analysis
 				hold on
 
 
-				% figure(h3);
-				% plot(t, count./memintArea, 'LineWidth', 4);
-				% hold on
-				% legend(sprintf('%g',mpe));
+				figure(h3);
+				plot(tc, count./memintArea, 'LineWidth', 4);
+				hold on
+				legend(sprintf('%g',mpe));
 
 
 				figure(h4);
@@ -155,56 +161,21 @@ classdef MembranePressureAnalysis < Analysis
 				hold on
 
 
+				figure(h5);
+				plot(tm, memavgRadius, 'LineWidth', 4);
+				hold on
 
-
-				% h = figure;
-
-				% plot(t, intArea, t, memintArea, 'LineWidth', 4);
-				% legend('Void', 'Duct + void');
-				% title(sprintf('Area over time'),'Interpreter', 'latex', 'FontSize', 22);
-				% xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 15);
-				% ylabel('Area (CD$^2$)','Interpreter', 'latex', 'FontSize', 15);
-
-				% SavePlot(obj, h, sprintf('Area_mpe%g',mpe));
-
-
-				% h = figure;
-
-				% plot(t, perimeter, t, memperimeter, 'LineWidth', 4);
-				% legend('Void', 'Duct + void');
-				% title(sprintf('Perimeter over time'),'Interpreter', 'latex', 'FontSize', 22);
-				% xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 15);
-				% ylabel('Perimeter (CD)','Interpreter', 'latex', 'FontSize', 15);
-
-				% SavePlot(obj, h, sprintf('Perimeter_mpe%g',mpe));
-
-
-				% h = figure;
-
-				% plot(t, avgRadius, t, memavgRadius, 'LineWidth', 4);
-				% legend('Void', 'Duct + void');
-				% title(sprintf('Avg radius over time'),'Interpreter', 'latex', 'FontSize', 22);
-				% xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 15);
-				% ylabel('Avg radius (CD)','Interpreter', 'latex', 'FontSize', 15);
-
-				% SavePlot(obj, h, sprintf('Avg_radius_mpe%g',mpe));
-
-
-				% h = figure;
-
-				% plot(t, count, 'LineWidth', 4);
-				% title(sprintf('Cell count over time'),'Interpreter', 'latex', 'FontSize', 22);
-				% xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 15);
-				% ylabel('Cell count','Interpreter', 'latex', 'FontSize', 15);
-
-				% SavePlot(obj, h, sprintf('Cell_count_mpe%g',mpe));
 
 			end
 
 			figure(h1);
-			title(sprintf('Area over time'),'Interpreter', 'latex', 'FontSize', 22);
-			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 15);
-			ylabel('Area (CD$^2$)','Interpreter', 'latex', 'FontSize', 15);
+			title(sprintf('Area over time'),'Interpreter', 'latex', 'FontSize', tFontSize);
+			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylabel('Area (CD$^2$)','Interpreter', 'latex', 'FontSize', lFontSize);
+			xlim([0,150])
+			ylim([80, 450])
+			ax = gca;
+			ax.FontSize = aFontSize;
 			legend(num2str(obj.mpe'));
 			legend('Location','best');
 
@@ -212,33 +183,52 @@ classdef MembranePressureAnalysis < Analysis
 
 
 			figure(h2);
-			title(sprintf('Cell count over time'),'Interpreter', 'latex', 'FontSize', 22);
-			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 15);
-			ylabel('Cell count','Interpreter', 'latex', 'FontSize', 15);
+			title(sprintf('Cell count over time'),'Interpreter', 'latex', 'FontSize', tFontSize);
+			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylabel('Cell count','Interpreter', 'latex', 'FontSize', lFontSize);
+			ax = gca;
+			ax.FontSize = aFontSize;
 			legend(num2str(obj.mpe'));
 			legend('Location','best');
 
 			SavePlot(obj, h2, sprintf('Cell_count'));
 
 
-			% figure(h3);
-			% title(sprintf('Cell density over time'),'Interpreter', 'latex', 'FontSize', 22);
-			% xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 15);
-			% ylabel('Density (cells/CD$^2$)','Interpreter', 'latex', 'FontSize', 15);
-			% legend(num2str(obj.mpe'));
-			% legend('Location','best');
+			figure(h3);
+			title(sprintf('Cell density over time'),'Interpreter', 'latex', 'FontSize', tFontSize);
+			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylabel('Density (cells/CD$^2$)','Interpreter', 'latex', 'FontSize', lFontSize);
+			legend(num2str(obj.mpe'));
+			legend('Location','best');
 
-			% SavePlot(obj, h3, sprintf('Cell_density'));
+			SavePlot(obj, h3, sprintf('Cell_density'));
 
 
 			figure(h4);
-			title(sprintf('Void area over time'),'Interpreter', 'latex', 'FontSize', 22);
-			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 15);
-			ylabel('Area (CD$^2$)','Interpreter', 'latex', 'FontSize', 15);
+			title(sprintf('Lumen area over time'),'Interpreter', 'latex', 'FontSize', tFontSize);
+			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylabel('Area (CD$^2$)','Interpreter', 'latex', 'FontSize', lFontSize);
+			ax = gca;
+			ax.FontSize = aFontSize;
 			legend(num2str(obj.mpe'));
 			legend('Location','best');
 
 			SavePlot(obj, h4, sprintf('Void_area'));
+
+
+			figure(h5);
+			title(sprintf('Membrane radius over time'),'Interpreter', 'latex', 'FontSize', tFontSize);
+			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylabel('Radius (CD)','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylim([5, 12])
+			ax = gca;
+			ax.FontSize = aFontSize;
+			legend(num2str(obj.mpe'));
+			legend('Location','best');
+
+			SavePlot(obj, h5, sprintf('Membrane_radius'));
+
+
 		end
 
 	end

@@ -7,13 +7,13 @@ classdef TumourInMembraneAnalysis < Analysis
 		t0 = 9;
 		tg = 9;
 
-		mpe = 20:20:100;
+		mpe = 40:20:100;
 
 		f = 0.9;
 
 		dF = 0.5;
 
-		seed = 1:10;
+		seed = 1:20;
 
 		analysisName = 'TumourInMembraneAnalysis';
 
@@ -76,23 +76,11 @@ classdef TumourInMembraneAnalysis < Analysis
 		function AssembleData(obj)
 
 
-			% No special assembly required
-
-			
-		end
-
-		function PlotData(obj)
-
 			obj.MakeParameterSet();
 
-			h1 = figure;
-
-			h2 = figure;
-
-			h3 = figure;
-
-			h4 = figure;
-
+			memArea = [];
+			intArea = [];
+			
 			for i = 1:size(obj.parameterSet,1)
 
 				params = obj.parameterSet(i,:);
@@ -104,141 +92,85 @@ classdef TumourInMembraneAnalysis < Analysis
 				f = params(5);
 				dF = params(6);
 
+				allMem = [];
+				allInt = [];
 
-				a = ManageTumourInMembrane(r, t0, tg, mpe, f, dF, obj.seed);
+				for j = obj.seed
 
-				a.LoadSimulationData();
+					a = ManageTumourInMembrane(r, t0, tg, mpe, f, dF, j);
 
-				mem = a.data.membraneData;
+					a.LoadSimulationData();
 
-				count = a.data.cellCountData;
+					mem = a.data.membraneData;
 
-				void = a.data.innerRadiusData;
+					void = a.data.innerRadiusData;
 
-				tm = mem(:,1);
+					% Pad with the last value
+					allMem = Concatenate(obj, allMem, mem(:,2)', mem(end,2));
 
-				memintArea = mem(:,2);
-				memperimeter = mem(:,3);
-				memavgRadius = mem(:,4);
+					lumen = void(:,2)';
+					lumen(lumen == lumen(end)) = [];
 
+					% Pad with zeros
+					allInt = Concatenate(obj, allInt, lumen,0);
 
-				tc = count(:,1);
-				count = count(:,2);
+				end
 
-				tv = void(:,1);
-				intArea = void(:,2);
-				perimeter = void(:,3);
-				avgRadius = void(:,4);
-				centre = void(:,5:6);
-
-
-				intArea(intArea == intArea(end)) = nan;
-				
-				figure(h1);
-				plot(tm, memintArea, 'LineWidth', 4);
-				hold on
-
-				
-				figure(h2);
-				plot(tc, count, 'LineWidth', 4);
-				hold on
-
-
-				% figure(h3);
-				% plot(t, count./memintArea, 'LineWidth', 4);
-				% hold on
-				% legend(sprintf('%g',mpe));
-
-
-				figure(h4);
-				plot(tc, intArea, 'LineWidth', 4);
-				hold on
-
-
-
-
-				% h = figure;
-
-				% plot(t, intArea, t, memintArea, 'LineWidth', 4);
-				% legend('Void', 'Duct + void');
-				% title(sprintf('Area over time'),'Interpreter', 'latex', 'FontSize', 22);
-				% xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 15);
-				% ylabel('Area (CD$^2$)','Interpreter', 'latex', 'FontSize', 15);
-
-				% SavePlot(obj, h, sprintf('Area_mpe%g',mpe));
-
-
-				% h = figure;
-
-				% plot(t, perimeter, t, memperimeter, 'LineWidth', 4);
-				% legend('Void', 'Duct + void');
-				% title(sprintf('Perimeter over time'),'Interpreter', 'latex', 'FontSize', 22);
-				% xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 15);
-				% ylabel('Perimeter (CD)','Interpreter', 'latex', 'FontSize', 15);
-
-				% SavePlot(obj, h, sprintf('Perimeter_mpe%g',mpe));
-
-
-				% h = figure;
-
-				% plot(t, avgRadius, t, memavgRadius, 'LineWidth', 4);
-				% legend('Void', 'Duct + void');
-				% title(sprintf('Avg radius over time'),'Interpreter', 'latex', 'FontSize', 22);
-				% xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 15);
-				% ylabel('Avg radius (CD)','Interpreter', 'latex', 'FontSize', 15);
-
-				% SavePlot(obj, h, sprintf('Avg_radius_mpe%g',mpe));
-
-
-				% h = figure;
-
-				% plot(t, count, 'LineWidth', 4);
-				% title(sprintf('Cell count over time'),'Interpreter', 'latex', 'FontSize', 22);
-				% xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 15);
-				% ylabel('Cell count','Interpreter', 'latex', 'FontSize', 15);
-
-				% SavePlot(obj, h, sprintf('Cell_count_mpe%g',mpe));
+				memArea = Concatenate(obj, memArea, nanmean(allMem));
+				intArea = Concatenate(obj, intArea, mean(allInt));
 
 			end
 
-			figure(h1);
-			title(sprintf('Area over time'),'Interpreter', 'latex', 'FontSize', 22);
-			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 15);
-			ylabel('Area (CD$^2$)','Interpreter', 'latex', 'FontSize', 15);
+			obj.result = {memArea, intArea};
+
+			
+		end
+
+		function PlotData(obj)
+
+			memArea = obj.result{1};
+			intArea = obj.result{2};
+
+			tm = 0.1:0.1:0.1*length(memArea);
+			ti = 0.1:0.1:0.1*length(intArea);
+
+			tFontSize = 40;
+			lFontSize = 30;
+			aFontSize = 24;
+
+
+			h1 = figure;
+			plot(tm, memArea, 'LineWidth', 4);
+			ax = gca;
+			ax.FontSize = aFontSize;
+			title(sprintf('Contained area over time'),'Interpreter', 'latex', 'FontSize', tFontSize);
+			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylabel('Area (CD$^2$)','Interpreter', 'latex', 'FontSize', lFontSize);
+			xlim([0,200])
+			ylim([80, 400])
+			
 			legend(num2str(obj.mpe'));
-			legend('Location','best');
+			legend('Location','northwest');
 
 			SavePlot(obj, h1, sprintf('Area'));
 
+			
 
-			figure(h2);
-			title(sprintf('Cell count over time'),'Interpreter', 'latex', 'FontSize', 22);
-			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 15);
-			ylabel('Cell count','Interpreter', 'latex', 'FontSize', 15);
-			legend(num2str(obj.mpe'));
-			legend('Location','best');
-
-			SavePlot(obj, h2, sprintf('Cell_count'));
-
-
-			% figure(h3);
-			% title(sprintf('Cell density over time'),'Interpreter', 'latex', 'FontSize', 22);
-			% xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 15);
-			% ylabel('Density (cells/CD$^2$)','Interpreter', 'latex', 'FontSize', 15);
-			% legend(num2str(obj.mpe'));
-			% legend('Location','best');
-
-			% SavePlot(obj, h3, sprintf('Cell_density'));
-
-
-			figure(h4);
-			title(sprintf('Void area over time'),'Interpreter', 'latex', 'FontSize', 22);
-			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', 15);
-			ylabel('Area (CD$^2$)','Interpreter', 'latex', 'FontSize', 15);
+			h4 = figure;
+			plot(ti, intArea, 'LineWidth', 4);
+			ax = gca;
+			ax.FontSize = aFontSize;
+			title(sprintf('Lumen area over time'),'Interpreter', 'latex', 'FontSize', tFontSize);
+			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylabel('Area (CD$^2$)','Interpreter', 'latex', 'FontSize', lFontSize);
+			
 			legend(num2str(obj.mpe'));
 			legend('Location','best');
 
 			SavePlot(obj, h4, sprintf('Void_area'));
+
+
+
 		end
 
 	end
