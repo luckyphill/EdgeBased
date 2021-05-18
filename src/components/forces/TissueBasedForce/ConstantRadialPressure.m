@@ -72,7 +72,7 @@ classdef ConstantRadialPressure < AbstractTissueBasedForce
 					rmag = norm(r);
 					loc(end + 1, :) = [i, r, rmag];
 
-					if rmag < 2*obj.radius
+					if rmag < obj.radius
 						obj.tooClose = true;
 						% fprintf('Internal pressure turned off\n');
 						break;
