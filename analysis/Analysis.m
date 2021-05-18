@@ -320,11 +320,16 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 
 		end
 
-		function A = Concatenate(obj, A, b)
+		function A = Concatenate(obj, A, b, varargin)
 
 			% Adds row vector b to the bottom of matrix A
 			% If padding is needed, nans are added to the right
 			% side of the matrix or vector as appropriate
+
+			pad = nan;
+			if ~isempty(varargin)
+				pad = varargin{1};
+			end
 
 			[Am,An] = size(A);
 			[bm,bn] = size(b);
@@ -332,14 +337,14 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 			if bn < An
 				% pad vector
 				d = An - bn;
-				b = [b, nan(1,d)];
+				b = [b, pad*ones(1,d)];
 			end
 			
 			if bn > An
 				% pad matrix
 				d = bn - An;
 				[m,n] = size(A);
-				A = [A,nan(m,d)];
+				A = [A,pad*ones(m,d)];
 			end
 
 			A = [A;b];
