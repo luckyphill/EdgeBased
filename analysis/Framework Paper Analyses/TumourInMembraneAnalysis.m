@@ -80,6 +80,8 @@ classdef TumourInMembraneAnalysis < Analysis
 
 			memArea = [];
 			intArea = [];
+			memAreaVar = [];
+			intAreaVar = [];
 			
 			for i = 1:size(obj.parameterSet,1)
 
@@ -112,16 +114,23 @@ classdef TumourInMembraneAnalysis < Analysis
 					lumen(lumen == lumen(end)) = [];
 
 					% Pad with zeros
-					allInt = Concatenate(obj, allInt, lumen,0);
+					allInt = Concatenate(obj, allInt, lumen, 0);
 
 				end
 
-				memArea = Concatenate(obj, memArea, nanmean(allMem));
-				intArea = Concatenate(obj, intArea, mean(allInt));
+				% Only count time points with more than 10 results
+				% nanIdx = sum(sum(~isnan(allInt))>6);
+				% (:,1:nanIdx)
+
+				memArea = Concatenate(obj, memArea, mean(allMem),0);
+				intArea = Concatenate(obj, intArea, mean(allInt),0);
+
+				memAreaVar = Concatenate(obj, memAreaVar, var(allMem), 0);
+				intAreaVar = Concatenate(obj, intAreaVar, var(allInt), 0);
 
 			end
 
-			obj.result = {memArea, intArea};
+			obj.result = {memArea, intArea, memAreaVar, intAreaVar};
 
 			
 		end
@@ -130,6 +139,8 @@ classdef TumourInMembraneAnalysis < Analysis
 
 			memArea = obj.result{1};
 			intArea = obj.result{2};
+			memAreaVar = obj.result{3};
+			intAreaVar = obj.result{4};
 
 			tm = 0.1:0.1:0.1*length(memArea);
 			ti = 0.1:0.1:0.1*length(intArea);
@@ -139,8 +150,17 @@ classdef TumourInMembraneAnalysis < Analysis
 			aFontSize = 24;
 
 
+			uQ = memArea + sqrt(memAreaVar);
+			bQ = memArea - sqrt(memAreaVar);
+
 			h1 = figure;
 			plot(tm, memArea, 'LineWidth', 4);
+			hold on
+			fill([tm,fliplr(tm)], [uQ(1,:),fliplr(bQ(1,:))], [0, .45, 0.74], 'FaceAlpha', 0.25, 'EdgeAlpha',0);
+			fill([tm,fliplr(tm)], [uQ(2,:),fliplr(bQ(2,:))], [0.85 0.32 0.01], 'FaceAlpha', 0.25, 'EdgeAlpha',0);
+			fill([tm,fliplr(tm)], [uQ(3,:),fliplr(bQ(3,:))], [0.92 0.69 0.12], 'FaceAlpha', 0.25, 'EdgeAlpha',0);
+			fill([tm,fliplr(tm)], [uQ(4,:),fliplr(bQ(4,:))], [0.49 0.18 0.55], 'FaceAlpha', 0.25, 'EdgeAlpha',0);		
+			
 			ax = gca;
 			ax.FontSize = aFontSize;
 			title(sprintf('Contained area over time'),'Interpreter', 'latex', 'FontSize', tFontSize);
@@ -154,16 +174,23 @@ classdef TumourInMembraneAnalysis < Analysis
 
 			SavePlot(obj, h1, sprintf('Area'));
 
-			
+			uQ = intArea + sqrt(intAreaVar);
+			bQ = intArea - sqrt(intAreaVar);
 
 			h4 = figure;
 			plot(ti, intArea, 'LineWidth', 4);
+			hold on
+			fill([ti,fliplr(ti)], [uQ(1,:),fliplr(bQ(1,:))], [0, .45, 0.74], 'FaceAlpha', 0.25, 'EdgeAlpha',0);
+			fill([ti,fliplr(ti)], [uQ(2,:),fliplr(bQ(2,:))], [0.85 0.32 0.01], 'FaceAlpha', 0.25, 'EdgeAlpha',0);
+			fill([ti,fliplr(ti)], [uQ(3,:),fliplr(bQ(3,:))], [0.92 0.69 0.12], 'FaceAlpha', 0.25, 'EdgeAlpha',0);
+			fill([ti,fliplr(ti)], [uQ(4,:),fliplr(bQ(4,:))], [0.49 0.18 0.55], 'FaceAlpha', 0.25, 'EdgeAlpha',0);
 			ax = gca;
 			ax.FontSize = aFontSize;
 			title(sprintf('Lumen area over time'),'Interpreter', 'latex', 'FontSize', tFontSize);
 			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
 			ylabel('Area (CD$^2$)','Interpreter', 'latex', 'FontSize', lFontSize);
-			
+			xlim([0,100])
+			ylim([0, 120])
 			legend(num2str(obj.mpe'));
 			legend('Location','best');
 
