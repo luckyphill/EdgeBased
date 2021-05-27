@@ -10,7 +10,7 @@ classdef AbstractElementBasedForce < matlab.mixin.Heterogeneous
 
 	methods (Abstract)
 
-		AddElementBasedForces(obj, cellList)
+		AddElementBasedForces(obj, elementList)
 
 	end
 

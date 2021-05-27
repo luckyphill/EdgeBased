@@ -29,9 +29,11 @@ classdef PolygonCellGrowthForce < AbstractCellBasedForce
 			for i = 1:length(cellList)
 
 				c = cellList(i);
-				obj.AddTargetAreaForces(c);
-				obj.AddTargetPerimeterForces(c);
-				obj.AddSurfaceTensionForces(c);
+				if c.cellType ~= 5 % As long as it is not stromal type
+					obj.AddTargetAreaForces(c);
+					obj.AddTargetPerimeterForces(c);
+					obj.AddSurfaceTensionForces(c);
+				end
 
 			end
 

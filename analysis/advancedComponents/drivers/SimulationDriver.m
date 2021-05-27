@@ -81,6 +81,7 @@ classdef (Abstract) SimulationDriver < matlab.mixin.SetGet
 			%% To make this more general, implement a way of having multiple files
 
 			successCode = 0;
+			obj.outputTypesToRun = {};
 
 			if obj.numOutputTypes == 0
 				error('sim:NoOutputTypes', 'At least one outputType must be specified before running the simulation');
@@ -114,7 +115,7 @@ classdef (Abstract) SimulationDriver < matlab.mixin.SetGet
 				else
 					% We need to run the simulation to generate the data that is missing
 
-					if obj.RunSimulation();
+					if obj.RunSimulation()
 						successCode = 1;
 						for i=1:length(obj.outputTypesToRun)
 							try
@@ -158,7 +159,7 @@ classdef (Abstract) SimulationDriver < matlab.mixin.SetGet
 					data = obj.outputTypes{i}.loadData(obj);
 				catch err
 					data = nan;
-					fprintf('Problem loading data for %s:\n%s\n', obj.outputTypes{i}.name, err.message);
+					warning('sim:LoadFailure','Problem loading data for %s:\n%s\n', obj.outputTypes{i}.name, err.message);
 				end
 				obj.data = setfield(obj.data,obj.outputTypes{i}.name,data);
 			end

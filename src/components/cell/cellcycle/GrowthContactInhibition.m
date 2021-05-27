@@ -141,7 +141,7 @@ classdef GrowthContactInhibition < AbstractCellCycleModel
 			g = g + obj.growthPhaseRNG();
 
 			if g < obj.minimumGrowthPhaseDuration
-				g = obj.minimumGrowthPhaseDuration
+				g = obj.minimumGrowthPhaseDuration;
 			end
 
 			obj.growthPhaseDuration = g;

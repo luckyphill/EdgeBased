@@ -4,6 +4,10 @@ classdef NodeCellCycle < AbstractCellCycleModel
 	properties
 
 		cycleLength
+
+		pauseColour
+		growthColour
+		inhibitedColour
 	end
 
 	methods
@@ -23,7 +27,6 @@ classdef NodeCellCycle < AbstractCellCycleModel
 
 		end
 
-		% Cell cycle mode does nothing, so it never divides
 		function ready = IsReadyToDivide(obj)
 
 			ready = false;

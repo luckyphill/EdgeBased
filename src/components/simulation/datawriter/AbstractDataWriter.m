@@ -165,6 +165,7 @@ classdef AbstractDataWriter < handle & matlab.mixin.Heterogeneous
 
 			% Only runs once. First checks if the directory exists,
 			% and if not makes it.
+			% This is only necessary because MATLAB doesn't allow constructors for abstract classes
 
 			homeDir = getenv('EDGEDIR');
 

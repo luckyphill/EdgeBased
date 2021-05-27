@@ -1,6 +1,12 @@
 classdef NodeCell < AbstractCell
 	% A cell that is represented by a single node
 	
+	properties
+
+		divisionSeparation = 0.05;
+
+	end
+
 	methods
 		
 		function obj = NodeCell(n, cellCycleModel, id)
@@ -13,6 +19,14 @@ classdef NodeCell < AbstractCell
 			obj.id = id;
 
 			obj.ancestorId = id;
+
+			n.cellList = obj;
+
+			obj.cellType = 1;
+
+			cellDataArray = [CellArea()];
+
+			obj.AddCellData(cellDataArray);
 
 		end
 
@@ -30,8 +44,8 @@ classdef NodeCell < AbstractCell
 			theta = 2*pi*rand;
 			direction = [cos(theta), sin(theta)];
 
-			newPos = centre + direction * 0.05;
-			oldPos = centre - direction * 0.05;
+			newPos = centre + direction * obj.divisionSeparation/2;
+			oldPos = centre - direction * obj.divisionSeparation/2;
 
 			% Create the two new nodes for the edge
 			n = Node(newPos(1), newPos(2), -1);
@@ -44,6 +58,7 @@ classdef NodeCell < AbstractCell
 
 			newCell.newCellTargetArea = obj.newCellTargetArea;
 			newCell.grownCellTargetArea = obj.grownCellTargetArea;
+			
 			newNodeList = [n];
 			newElementList = Element.empty();
 
@@ -54,6 +69,16 @@ classdef NodeCell < AbstractCell
 			obj.sisterCell = newCell;
 
 			newCell.ancestorId = obj.id;
+
+			% Transfer the cell data objects to the new cell
+			% This is a quick hack way to do it and it won't work if the
+			% classes become too complicated
+			keys = obj.cellData.keys;
+			for i=1:length(keys)
+				cellDataArray(i) = copy(obj.cellData(keys{i}));
+			end
+
+			newCell.AddCellData(cellDataArray);
 		
 		end
 

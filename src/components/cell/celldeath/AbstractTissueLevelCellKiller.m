@@ -18,4 +18,17 @@ classdef AbstractTissueLevelCellKiller <  matlab.mixin.Heterogeneous
 
 	end
 
+	methods
+
+		function EraseCellFromSimulation(obj, c)
+
+			% Does all the garbage collecting to get rid of all the unecessary
+			% components
+
+
+
+		end
+
+	end
+
 end

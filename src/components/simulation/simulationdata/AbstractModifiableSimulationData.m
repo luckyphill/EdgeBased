@@ -14,14 +14,21 @@ classdef AbstractModifiableSimulationData < AbstractSimulationData
 			
 		end
 
-		function correct = DataIsValid(obj, d)
+		function CalculateData(obj, t)
 
-			% Not always needed, default to true so it doesn't
-			% need to be implemented in every case
-			correct = true;
+			% Does nothing. Need to do this for now. Later revisision will separate out
+			% the function of modifiable data storage better
 
 		end
 
+
+	end
+
+	methods (Abstract)
+
+		% This method must return data
+		correct = DataIsValid(obj, d)
+		
 	end
 
 end

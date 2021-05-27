@@ -479,12 +479,79 @@ classdef (Abstract) AbstractCellSimulation < matlab.mixin.SetGet
 
 			% Loop through the cell killers
 
+			% Currently the two killer types work differently.
+			% This is for backward compatibility with a hack job that
+			% I still need to work right now
+			% Note to self, after all your work with DynamicLayer is done
+			% take some time to fix this up for SquareCellJoined
+
 			for i = 1:length(obj.tissueLevelKillers)
 				obj.tissueLevelKillers(i).KillCells(obj);
 			end
 
+			killList = AbstractCell.empty();
 			for i = 1:length(obj.cellKillers)
-				obj.cellKillers(i).KillCells(obj.cellList);
+				killList = [killList, obj.cellKillers(i).MakeKillList(obj.cellList)];
+			end
+
+			obj.ProcessCellsToRemove(killList);
+
+		end
+
+		function ProcessCellsToRemove(obj, killList)
+
+			% Loop from the end because we're removing cells from a list
+			for i = length(killList):-1:1
+
+				c = killList(i);
+
+				% Do all the clean up
+
+				% Need a separate way to handle joined cells
+
+				% Clean up elements
+
+				for j = 1:length(c.elementList)
+
+					obj.elementList(obj.elementList == c.elementList(j)) = [];
+					if obj.usingBoxes
+						obj.boxes.RemoveElementFromPartition(c.elementList(j));
+					end
+
+					c.elementList(j).delete;
+
+				end
+
+				for j = 1:length(c.nodeList)
+
+					obj.nodeList(obj.nodeList == c.nodeList(j)) = [];
+					if obj.usingBoxes
+						obj.boxes.RemoveNodeFromPartition(c.nodeList(j));
+					end
+					c.nodeList(j).delete;
+
+				end
+
+				% Clean up Cell
+
+				% Since the cell List for the tissue is heterogeneous, we can't use
+				% obj.cellList(obj.cellList == c) = []; to delete the cell because 
+				% "one or more inputs of class 'AbstractCell' are heterogeneous
+				% and 'eq' is not sealed". I have no idea what this means, but
+				% it is a quirk of matlab OOP we have to work around
+				for j = 1:length(obj.cellList)
+					oc = obj.cellList(j);
+
+					if oc == c
+						obj.cellList(j) = [];
+						break;
+					end
+
+				end
+				
+
+				c.delete;
+
 			end
 
 		end
@@ -573,7 +640,7 @@ classdef (Abstract) AbstractCellSimulation < matlab.mixin.SetGet
 			h = figure();
 			hold on
 			% r is rod "radius"
-			% r = 0.08; % The width of the rods
+
 			patchObjects(length(obj.cellList)) = patch([1,1],[2,2],1, 'LineWidth', 2);
 
 			for i = 1:length(obj.cellList)
@@ -591,7 +658,6 @@ classdef (Abstract) AbstractCellSimulation < matlab.mixin.SetGet
 			axis equal
 
 		end
-
 
 		function VisualiseNodes(obj, r)
 			% r is cell radius
@@ -616,6 +682,42 @@ classdef (Abstract) AbstractCellSimulation < matlab.mixin.SetGet
 
 		end
 
+		function VisualiseNodesAndEdges(obj, r)
+			% r is cell radius
+
+			h = figure();
+			hold on
+
+			patchObjects(length(obj.cellList)) = patch([1,1],[2,2],1, 'LineWidth', 2);
+
+			for i = 1:length(obj.cellList)
+
+				c = obj.cellList(i);
+
+				if isa(c,'NodeCell')
+					a = c.nodeList(1).position;
+
+					[pillX,pillY] = obj.DrawPill(a,a,r);
+					patchObjects(i) = patch(pillX,pillY,c.GetColour(), 'LineWidth', 2);
+				end
+
+			end
+
+			for i = 1:length(obj.elementList)
+
+				x1 = obj.elementList(i).Node1.x;
+				x2 = obj.elementList(i).Node2.x;
+				x = [x1,x2];
+				y1 = obj.elementList(i).Node1.y;
+				y2 = obj.elementList(i).Node2.y;
+				y = [y1,y2];
+
+				line(x,y, 'Color', 'k', 'LineWidth', 4)
+			end
+
+			axis equal
+
+		end
 
 		function VisualiseWireFrame(obj, varargin)
 
@@ -935,6 +1037,111 @@ classdef (Abstract) AbstractCellSimulation < matlab.mixin.SetGet
 				for k = length(patchObjects):-1:length(obj.cellList)+1
 					patchObjects(k).delete;
 					patchObjects(k) = [];
+				end
+
+				drawnow
+				title(sprintf('t=%g',obj.t),'Interpreter', 'latex');
+
+			end
+
+		end
+
+		function AnimateNodesAndEdges(obj,n,sm,r)
+
+			% Initialise an array of line objects
+			h = figure();
+			hold on
+			axis equal
+
+			% r is the rod "radius"
+			lWCell = 2;
+			lWMembrane = 4;
+
+			% Initialise the array with anything
+			patchObjects(length(obj.cellList)) = patch([1,1],[2,2],1, 'LineWidth', lWCell);
+
+			for i = 1:length(obj.cellList)
+
+				c = obj.cellList(i);
+
+				if isa(c,'NodeCell')
+					a = c.nodeList(1).position;
+
+					[pillX,pillY] = obj.DrawPill(a,a,r);
+					patchObjects(i) = patch(pillX,pillY,c.GetColour(), 'LineWidth', lWCell);
+				end
+
+			end
+
+			lineObjects(length(obj.elementList)) = line([1,1],[2,2]);
+
+			for i = 1:length(obj.elementList)
+				
+				x1 = obj.elementList(i).Node1.x;
+				x2 = obj.elementList(i).Node2.x;
+				x = [x1,x2];
+				y1 = obj.elementList(i).Node1.y;
+				y2 = obj.elementList(i).Node2.y;
+				y = [y1,y2];
+
+				lineObjects(i) = line(x,y, 'Color', 'k', 'LineWidth', lWMembrane);
+			end
+
+
+			totalSteps = 0;
+			while totalSteps < n
+
+				obj.NTimeSteps(sm);
+				totalSteps = totalSteps + sm;
+
+				for j = 1:length(obj.cellList)
+
+					c = obj.cellList(j);
+
+					if isa(c,'NodeCell')
+
+						a = c.nodeList(1).position;
+
+						if j > length(patchObjects)
+							[pillX,pillY] = obj.DrawPill(a,a,r);
+							patchObjects(j) = patch(pillX,pillY,c.GetColour(), 'LineWidth', lWCell);
+						else
+							[pillX,pillY] = obj.DrawPill(a,a,r);
+							patchObjects(j).XData = pillX;
+							patchObjects(j).YData = pillY;
+							patchObjects(j).FaceColor = c.GetColour();
+						end
+
+					end
+
+				end
+
+				for k = length(patchObjects):-1:length(obj.cellList)+1
+					patchObjects(k).delete;
+					patchObjects(k) = [];
+				end
+
+				for j = 1:length(obj.elementList)
+				
+					x1 = obj.elementList(j).Node1.x;
+					x2 = obj.elementList(j).Node2.x;
+					x = [x1,x2];
+					y1 = obj.elementList(j).Node1.y;
+					y2 = obj.elementList(j).Node2.y;
+					y = [y1,y2];
+
+					if j > length(lineObjects)
+						lineObjects(j) = line(x,y, 'Color', 'k', 'LineWidth', lWMembrane);
+					else
+						lineObjects(j).XData = x;
+						lineObjects(j).YData = y;
+					end
+				end
+
+				% Delete the line objects when there are too many
+				for j = length(lineObjects):-1:length(obj.elementList)+1
+					lineObjects(j).delete;
+					lineObjects(j) = [];
 				end
 
 				drawnow

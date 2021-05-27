@@ -197,6 +197,10 @@ classdef SpacePartition < matlab.mixin.SetGet
 			% time, taking account of obtuse angled element pairs
 			% necessitating node-node interactions
 
+			% The nodes it finds are only part of edges in proximity
+			% This does not work if NodeCells are in the simulation,
+			% as it does not find isolated node.
+
 			b = [];
 
 			if obj.onlyBoxesInProximity

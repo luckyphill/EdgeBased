@@ -12,7 +12,7 @@ classdef StartCell < AbstractSimulationData
 
 	methods
 
-		function obj = CentreLine
+		function obj = StartCell
 			% No special initialisation
 		end
 

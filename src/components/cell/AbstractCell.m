@@ -263,6 +263,7 @@ classdef AbstractCell < handle & matlab.mixin.Heterogeneous
 
 		end
 
+		% These are mainly for debugging
 		function DrawCell(obj)
 
 			% plot a line for each element

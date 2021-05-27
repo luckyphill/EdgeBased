@@ -1,8 +1,4 @@
-classdef BasalNode < AbstractSplitNode < handle
-	% This class sets out the required functions for working
-	% out the node in a free cell where division starts from
-
-
+classdef BasalNode < AbstractSplitNode
 
 	methods
 
@@ -10,15 +6,25 @@ classdef BasalNode < AbstractSplitNode < handle
 
 		end
 
-		function [n, i] = GetSplitNode(obj,c)
+		function [n, i] = GetSplitNode(obj, c)
 
-			% Loops through the nodes, and determines which nodes are
-			% attached to the basement membrane
+			% Loops through the nodes, and chooses the lowest node in the cell
+			% to be the split node
 
-			% Place holder random selection
-			i = randi( length(c.nodeList) );
-			n = c.nodeList(  i  );
+			lowestIdx = 0;
+			lowestY = 100000000; % This will almost surely never be an issue
 
+			for i = 1:length(c.nodeList)
+				n = c.nodeList(  i  );
+				if n.y < lowestY
+					lowestY = n.y;
+					lowestIdx = i;
+				end
+			end
+
+			i = lowestIdx;
+			n = c.nodeList(  lowestIdx  );
+			
 		end
 
 	end

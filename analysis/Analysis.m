@@ -37,7 +37,11 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 
 		slurmJobArrayLimit = 10000
 
-		specifySeedDirectly = false
+		seedIsInParameterSet = false
+
+		seedHandledByScript = false
+
+		usingHPC = false
 
 	end
 
@@ -64,11 +68,22 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 
 			command = '';
 
-			if obj.specifySeedDirectly
-				% Need to build the parameter set for a directly specified seed
-				parametersToWrite = BuildParametersWithSeed(obj);
-			else
+			if obj.seedIsInParameterSet
+				% The seed in already part of obj. parameterset,so just need to dump the parameters to file
 				parametersToWrite = obj.parameterSet;
+			else
+				% Seed is specified elsewhere
+				if obj.seedHandledByScript
+					% Sweeping over different seeds is handled by the job script so
+					% just need to dump the parameters to file
+					parametersToWrite = obj.parameterSet;
+				else
+					% The seed will be written in the parameter file, but is not part of
+					% obj.parameterSet, so it needs to be added using the property obj.seed
+					% specified in the sub class
+					parametersToWrite = BuildParametersWithSeed(obj);
+				end
+				
 			end
 
 			if length(parametersToWrite) <= obj.slurmJobArrayLimit
@@ -106,6 +121,62 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 
 			% Now to make the shell file for sbatch  (...maybe do this later)
 			fid = fopen([obj.simulationFileLocation, 'launcher.sh'],'w');
+			fprintf(fid, command);
+			fclose(fid);
+
+		end
+
+		function ProduceMissingDataSimulationFiles(obj)
+
+			% This will make the parameter set file and the
+			% shell script needed for sbatch
+
+			obj.SetSaveDetails();
+
+			command = '';
+
+			if obj.seedHandledByScript
+				fprintf('This functionality hasnt been implemented yet')
+				parametersToWrite = [];
+			else
+				parametersToWrite = obj.missingParameterSet;
+			end
+
+			if length(parametersToWrite) <= obj.slurmJobArrayLimit
+				% If the parameter set is less than the job array limit, no need to
+				% number the param files
+				paramFile = [obj.analysisName, '_missing.txt'];
+				paramFilePath = [obj.simulationFileLocation, paramFile];
+				dlmwrite( paramFilePath, parametersToWrite, 'precision','%g');
+
+				command = obj.BuildCommand(length(parametersToWrite), paramFile);
+
+			else
+				% If it's at least obj.slurmJobArrayLimit + 1, then split it over
+				% several files
+				nFiles = ceil( length(parametersToWrite) / obj.slurmJobArrayLimit );
+				for i = 1:nFiles-1
+					paramFile = [obj.analysisName, '_missing_', num2str(i), '.txt'];
+					paramFilePath = [obj.simulationFileLocation, paramFile];
+					
+					iRange = (  (i-1) * obj.slurmJobArrayLimit + 1 ):( i * obj.slurmJobArrayLimit );
+					dlmwrite( paramFilePath, parametersToWrite(iRange, :), 'precision','%g');
+					
+					command = [command, obj.BuildCommand(obj.slurmJobArrayLimit, paramFile), '\n'];
+
+				end
+				% The last chunk
+				paramFile = [obj.analysisName, '_missing_', num2str(nFiles), '.txt'];
+				paramFilePath = [obj.simulationFileLocation, paramFile];
+				
+				iRange = (  (nFiles-1) * obj.slurmJobArrayLimit + 1 ):length(parametersToWrite);
+				dlmwrite( paramFilePath, parametersToWrite(iRange, :),'precision','%g');
+
+				command = [command, obj.BuildCommand(length(parametersToWrite) - i *obj.slurmJobArrayLimit, paramFile)];
+			end
+
+			% Now to make the shell file for sbatch  (...maybe do this later)
+			fid = fopen([obj.simulationFileLocation, 'launcherMissing.sh'],'w');
 			fprintf(fid, command);
 			fclose(fid);
 
@@ -161,7 +232,7 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 			% Build up the command to launch the sbatch
 
 			% If we want each job to have a single seed, then set obj.specifySeedDirectly to true
-			if obj.specifySeedDirectly
+			if ~obj.seedHandledByScript
 				
 				command = 'sbatch ';
 				command = [command, sprintf('--array=0-%d ',len)];
@@ -191,7 +262,8 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 			% are required every time, this is not going to help you
 
 			params = [];
-			for i = 1:length(obj.parameterSet)
+			m = size(obj.parameterSet,1);
+			for i = 1:m
 				for seed = obj.seed
 					params(end+1,:) = [obj.parameterSet(i,:), seed];
 				end
@@ -209,8 +281,7 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 				edgeBasedPath(end+1) = '/';
 			end
 
-			% Only relevant when outputting HPC simulation files
-			% obj.simulationFileLocation = [edgeBasedPath, 'phoenix/', obj.analysisName, '/'];
+			
 
 			obj.imageSaveLocation = [edgeBasedPath, 'Images/', obj.analysisName, '/'];
 
@@ -226,9 +297,14 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 				mkdir(obj.dataSaveLocation);
 			end
 
-			% if exist(obj.simulationFileLocation,'dir')~=7
-			% 	mkdir(obj.simulationFileLocation);
-			% end
+			% Only relevant when outputting HPC simulation files
+			if obj.usingHPC
+				obj.simulationFileLocation = [edgeBasedPath, 'HPC/', obj.analysisName, '/'];
+
+				if exist(obj.simulationFileLocation,'dir')~=7
+					mkdir(obj.simulationFileLocation);
+				end
+			end
 
 		end
 
@@ -244,11 +320,16 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 
 		end
 
-		function A = Concatenate(obj, A, b)
+		function A = Concatenate(obj, A, b, varargin)
 
 			% Adds row vector b to the bottom of matrix A
 			% If padding is needed, nans are added to the right
 			% side of the matrix or vector as appropriate
+
+			pad = nan;
+			if ~isempty(varargin)
+				pad = varargin{1};
+			end
 
 			[Am,An] = size(A);
 			[bm,bn] = size(b);
@@ -256,14 +337,14 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 			if bn < An
 				% pad vector
 				d = An - bn;
-				b = [b, nan(1,d)];
+				b = [b, pad*ones(1,d)];
 			end
 			
 			if bn > An
 				% pad matrix
 				d = bn - An;
 				[m,n] = size(A);
-				A = [A,nan(m,d)];
+				A = [A,pad*ones(m,d)];
 			end
 
 			A = [A;b];
