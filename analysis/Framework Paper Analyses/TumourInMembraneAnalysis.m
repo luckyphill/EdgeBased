@@ -142,6 +142,14 @@ classdef TumourInMembraneAnalysis < Analysis
 			memAreaVar = obj.result{3};
 			intAreaVar = obj.result{4};
 
+			scaleFactor = 0.0001; % 10um^2
+			memArea = memArea * scaleFactor;
+			intArea = intArea * scaleFactor;
+			memAreaVar = memAreaVar * scaleFactor^2;
+			intAreaVar = intAreaVar * scaleFactor^2;
+
+
+
 			tm = 0.1:0.1:0.1*length(memArea);
 			ti = 0.1:0.1:0.1*length(intArea);
 
@@ -165,9 +173,9 @@ classdef TumourInMembraneAnalysis < Analysis
 			ax.FontSize = aFontSize;
 			title(sprintf('Contained area over time'),'Interpreter', 'latex', 'FontSize', tFontSize);
 			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
-			ylabel('Area (CD$^2$)','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylabel('Area (mm$^2$)','Interpreter', 'latex', 'FontSize', lFontSize);
 			xlim([0,200])
-			ylim([80, 400])
+			ylim(scaleFactor*[80, 400])
 			
 			legend(num2str(obj.mpe'));
 			legend('Location','northwest');
@@ -188,9 +196,9 @@ classdef TumourInMembraneAnalysis < Analysis
 			ax.FontSize = aFontSize;
 			title(sprintf('Lumen area over time'),'Interpreter', 'latex', 'FontSize', tFontSize);
 			xlabel('Time (hr)','Interpreter', 'latex', 'FontSize', lFontSize);
-			ylabel('Area (CD$^2$)','Interpreter', 'latex', 'FontSize', lFontSize);
+			ylabel('Area (mm$^2$)','Interpreter', 'latex', 'FontSize', lFontSize);
 			xlim([0,100])
-			ylim([0, 120])
+			ylim(scaleFactor*[0, 120])
 			legend(num2str(obj.mpe'));
 			legend('Location','best');
 
