@@ -11,7 +11,7 @@ If you have downloaded this from GitHub, then you should find a directory called
 Preparation
 ********************************************************
 
-Before simulating any models, the enivironment variable "EDGEDIR" must be set. This is so the simulation data output can be written in the correct location for the visualiser. "EDGEDIR" should be the full path to the contents of "EdgeBased/", which on a Mac or Unix machine will be something like "/Users/[yourusername]/[otherdirectories]/EdgeBased/", or a PC "C:\Users\\[otherdirectories]\EdgeBased\". This can be done within MATLAB navigating to "EdgeBased" in the MATALB file browser, and using the command
+Before simulating any models, the enivironment variable "EDGEDIR" must be set. This is so the simulation data output can be written in the correct location for the visualiser. "EDGEDIR" should be the full path to the contents of "EdgeBased/", which on a Mac or Unix machine will be something like "/Users/[yourusername]/[otherdirectories]/EdgeBased/", or a PC "C:\Users\\[otherdirectories]\EdgeBased\". This can be done within MATLAB by navigating to "EdgeBased" in the MATLAB file browser, and using the command
 
 	setenv('EDGEDIR',pwd)
 	
