@@ -1,5 +1,5 @@
 classdef TumourInMembraneAnalysis < Analysis
-	% Checks how varying the internal pressure affects things
+	% Checks how varying the membrane tension affects things
 	properties
 
 		
