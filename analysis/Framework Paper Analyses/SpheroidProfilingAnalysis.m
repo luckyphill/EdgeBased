@@ -58,20 +58,6 @@ classdef SpheroidProfilingAnalysis < Analysis
 
 		function AssembleData(obj)
 
-			% Just need to load the time series as in the visaliser
-
-			% fileName = sprintf('%s/HPC/SpheroidProfiling/result.mat',getenv('EDGEDIR'));
-			% load(fileName);
-
-			% run_time = result{1};
-			% node_count = result{2};
-			% edge_count = result{3};
-			% cell_count = result{4};
-
-			% % A bit redundant, but helps keep things standardised
-			% % especially for saving and loading
-			% obj.result = {run_time, node_count, edge_count, cell_count};
-
 
 			% Trying out something new - using assemble data to run th simulation
 			% maybe there's a better way in general, but this should do the trick
