@@ -40,7 +40,3 @@ if [ $found = 1 ]; then
 else 
   echo "SLURM_ARRAY_TASK_ID $SLURM_ARRAY_TASK_ID is outside range of input file $paramFile" 
 fi
-
-addpath(genpath([pwd,'/src']));
-addpath(genpath([pwd,'/HPC']));
-addpath(genpath([pwd,'/analysis']));
