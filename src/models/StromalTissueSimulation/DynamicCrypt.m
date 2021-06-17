@@ -23,8 +23,6 @@ classdef DynamicCrypt < LineSimulation
 			epiCellType = 1;
 			stromalCellType = 5;
 
-			% N is the number of cells in the layer. This in turn defines the width
-			% of the stromal blob supporting the cells
 			% p, the pause/resting phase duration
 			% g, the growing phase duration
 			% b, The interaction spring force parameter
