@@ -1,21 +1,35 @@
-classdef CornerForceCouple < AbstractCellBasedForce
-	% Applies a force to push the angle of a cell corner towards its prefered value
+classdef NicheCornerCorrectorForce < AbstractCellBasedForce
+	% Applies a force to make sure the angle of the cells in
+	% the niche of the crypt do not become too extreme
+	% It is designed specifically for DynamicCrypt, with SquareCellJoined
+	% The corner angles are fixed at pi/4
+
+
 
 
 	properties
 
 		cornerSpringRate
+		stroma			% a pointer to the cell acting as a stroma
+		nicheRange		% The approximate range above the crypt bottom where we should
+						% look for trapezoidal cells. This is probably the only location
+						% where there is risk of cells misbehaving, so we avoid applying
+						% elsewhere for speed
 
-		preferedAngle
+		preferedAngle = pi/2;
 
 	end
 
 	methods
 
-		function obj = CornerForceCouple(cornerP, angleP)
+		function obj = NicheCornerCorrectorForce(cornerP, stroma, nicheRange)
 
 			obj.cornerSpringRate = cornerP;
-			obj.preferedAngle = angleP;
+
+			obj.stroma = stroma;
+
+			obj.nicheRange = nicheRange;
+
 		end
 
 		function AddCellBasedForces(obj, cellList)
@@ -23,9 +37,15 @@ classdef CornerForceCouple < AbstractCellBasedForce
 			% For each cell in the list, calculate the forces
 			% and add them to the nodes
 
+			heights = [obj.stroma.nodeList.y];
+			base = sort(heights);
+			base = base(3);
+
 			for i = 1:length(cellList)
 				c = cellList(i);
-				if strcmp(class(c), 'SquareCellJoined')
+				centre = c.GetCellCentre;
+				% Only add these forces to the epithelial cells if they are in the crypt niche
+				if strcmp(class(c), 'SquareCellJoined') && centre(2) < base + obj.nicheRange
 					obj.AddCouples(c);
 				end
 
@@ -47,17 +67,17 @@ classdef CornerForceCouple < AbstractCellBasedForce
 
 			% Calculate the torque due to the angle
 			% Linear spring
-			% torqueTopLeft = 	obj.cornerSpringRate * ( obj.preferedAngle - angleTopLeft);
-			% torqueTopRight = 	obj.cornerSpringRate * ( obj.preferedAngle - angleTopRight);
-			% torqueBottomLeft = 	obj.cornerSpringRate * ( obj.preferedAngle - angleBottomLeft);
-			% torqueBottomRight = obj.cornerSpringRate * ( obj.preferedAngle - angleBottomRight);
+			torqueTopLeft = 	obj.cornerSpringRate * ( obj.preferedAngle - angleTopLeft);
+			torqueTopRight = 	obj.cornerSpringRate * ( obj.preferedAngle - angleTopRight);
+			torqueBottomLeft = 	obj.cornerSpringRate * ( obj.preferedAngle - angleBottomLeft);
+			torqueBottomRight = obj.cornerSpringRate * ( obj.preferedAngle - angleBottomRight);
 			% Exponential spring
 			% The numbers are specified so that the force starts ramping up after a deviation
 			% of pi/6 from the perferred angle, which should be pi/4
-			torqueTopLeft = 	obj.cornerSpringRate * sinh(10 * ( obj.preferedAngle - angleTopLeft)  ) / 500;
-			torqueTopRight = 	obj.cornerSpringRate * sinh(10 * ( obj.preferedAngle - angleTopRight)  ) / 500;
-			torqueBottomLeft = 	obj.cornerSpringRate * sinh(10 * ( obj.preferedAngle - angleBottomLeft)  ) / 500;
-			torqueBottomRight = obj.cornerSpringRate * sinh(10 * ( obj.preferedAngle - angleBottomRight)  ) / 500;
+			% torqueTopLeft = 	obj.cornerSpringRate * sinh(10 * ( obj.preferedAngle - angleTopLeft)  ) / 500;
+			% torqueTopRight = 	obj.cornerSpringRate * sinh(10 * ( obj.preferedAngle - angleTopRight)  ) / 500;
+			% torqueBottomLeft = 	obj.cornerSpringRate * sinh(10 * ( obj.preferedAngle - angleBottomLeft)  ) / 500;
+			% torqueBottomRight = obj.cornerSpringRate * sinh(10 * ( obj.preferedAngle - angleBottomRight)  ) / 500;
 
 			lenLeft = c.elementLeft.GetLength();
 			lenRight = c.elementRight.GetLength();

@@ -4,15 +4,15 @@
 #SBATCH -n 1 
 #SBATCH --mem=4GB
 #SBATCH --array=1-15
-#SBATCH --time=24:00:00
+#SBATCH --time=08:00:00
 # NOTIFICATIONS
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=phillip.j.brown@adelaide.edu.au
 
-module load arch/haswell
-module load matlab
 
-export EDGEDIR='/hpcfs/users/a1738927/Research/EdgeBased'
+module load matlab/2020a
+
+# export EDGEDIR='/hpcfs/users/a1738927/Research/EdgeBased'
 
 echo "array_job_index: $SLURM_ARRAY_TASK_ID"
 
@@ -28,7 +28,7 @@ do
 		break 
 	fi 
 	i=$((i + 1)) 
-done < QuickCryptSweep.txt
+done < DynamicCryptSweep.txt
 
 if [ $found = 1 ]; then
 	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath(pwd)); obj = DynamicCrypt($a, $b, $c, $d, $e, $f, $g, $h, $j, 1); obj.RunToTime(100); quit()"

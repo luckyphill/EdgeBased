@@ -12,6 +12,9 @@ classdef DynamicCrypt < LineSimulation
 
 		timeLimit = 1000
 
+		pathName
+		simulationOutputLocation
+
 	end
 
 	methods
@@ -44,6 +47,9 @@ classdef DynamicCrypt < LineSimulation
 			areaEnergy = 20;
 			perimeterEnergy = 10;
 			tensionEnergy = 1;
+
+			% Tosion spring stiffness for the corner corrector force
+			torsionStiffness = 1;
 
 			% Chosen from empirical testing
 			% Areas and perimeters for crypt cells
@@ -172,6 +178,9 @@ classdef DynamicCrypt < LineSimulation
 			% A special distinct force for the stroma
 			obj.AddCellBasedForce(StromaStructuralForce(stroma, sae, spe, 0));
 
+			% A force to help stop the crypt niche cells from crossing
+			obj.AddCellBasedForce(NicheCornerCorrectorForce(torsionStiffness, stroma, 2*nicheRadius));
+
 			% Node-Element interaction force - requires a SpacePartition
 			% Handles different interaction strengths between different cell types
 			cellTypes = [epiCellType,stromalCellType];
@@ -212,8 +221,8 @@ classdef DynamicCrypt < LineSimulation
 			%---------------------------------------------------
 
 			obj.AddSimulationData(SpatialState());
-			pathName = sprintf('DynamicCrypt/p%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%ghw%gnh%gnr%gch%gwnt%gan%gag%gpn%gpg%g_seed%g/',p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, halfWidth, nh, nicheRadius, ch, wnt, newArea, grownArea, newPerimeter, grownPrimeter, seed);
-			obj.AddDataWriter(WriteSpatialState(100,pathName));
+			obj.pathName = sprintf('DynamicCrypt/p%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%ghw%gnh%gnr%gch%gwnt%gan%gag%gpn%gpg%gts%g_seed%g/',p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, halfWidth, nh, nicheRadius, ch, wnt, newArea, grownArea, newPerimeter, grownPrimeter, torsionStiffness, seed);
+			obj.AddDataWriter(WriteSpatialState(100,obj.pathName));
 
 			%---------------------------------------------------
 			% All done. Ready to roll
