@@ -31,8 +31,8 @@ do
 done < DynamicCryptSweep.txt
 
 if [ $found = 1 ]; then
-	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath(pwd)); obj = DynamicCrypt($a, $b, $c, $d, $e, $f, $g, $h, $j, 1); obj.RunToTime(100); quit()"
-	matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath(pwd)); obj = DynamicCrypt($a, $b, $c, $d, $e, $f, $g, $h, $j, 1); obj.RunToTime(100); v = Visualiser(obj); v.ProduceMovie([],[],'Motion JPEG AVI'); quit()"
+	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath([pwd,'/src']));addpath(genpath([pwd,'/HPC']));addpath(genpath([pwd,'/analysis'])); obj = DynamicCrypt($a, $b, $c, $d, $e, $f, $g, $h, $j, 1); obj.RunToTime(100); quit()"
+	matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath([pwd,'/src']));addpath(genpath([pwd,'/HPC']));addpath(genpath([pwd,'/analysis'])); obj = DynamicCrypt($a, $b, $c, $d, $e, $f, $g, $h, $j, 1); obj.RunToTime(100); v = Visualiser(obj); v.ProduceMovie([],[],'Motion JPEG AVI'); quit()"
 else 
   echo "SLURM_ARRAY_TASK_ID $SLURM_ARRAY_TASK_ID is outside range of input file" 
 fi
