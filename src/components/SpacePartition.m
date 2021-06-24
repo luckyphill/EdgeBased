@@ -406,12 +406,12 @@ classdef SpacePartition < matlab.mixin.SetGet
 			% Remove elements from the cell the node is in
 			% it doesn't interact with them except indirectly
 			% via a volume force
-			for j = 1:length(n.cellList)
-				eL = n.cellList(j).elementList;
-				for i = 1:length(eL)
-					b(b==eL(i)) = [];
-				end
-			end
+			% for j = 1:length(n.cellList)
+			% 	eL = n.cellList(j).elementList;
+			% 	for i = 1:length(eL)
+			% 		b(b==eL(i)) = [];
+			% 	end
+			% end
 
 		end
 
