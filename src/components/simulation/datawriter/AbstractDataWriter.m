@@ -135,7 +135,11 @@ classdef AbstractDataWriter < handle & matlab.mixin.Heterogeneous
 							n = n(:)';
 						end
 						
-						dlmwrite(outputFile, n, '-append', 'precision', obj.precision);
+						% If the data is empty, don't write anything
+						% This will always write something if a timestamp is needed
+						if ~isempty(n)
+							dlmwrite(outputFile, n, '-append', 'precision', obj.precision);
+						end
 
 					case 'cell'
 						% Need to flatten the cell into a single row, and provide separate

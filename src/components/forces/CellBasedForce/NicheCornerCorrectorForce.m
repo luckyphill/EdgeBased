@@ -37,15 +37,18 @@ classdef NicheCornerCorrectorForce < AbstractCellBasedForce
 			% For each cell in the list, calculate the forces
 			% and add them to the nodes
 
-			heights = [obj.stroma.nodeList.y];
-			base = sort(heights);
-			base = base(3);
+			% heights = [obj.stroma.nodeList.y];
+			% base = sort(heights);
+			% base = base(3);
 
 			for i = 1:length(cellList)
 				c = cellList(i);
-				centre = c.GetCellCentre;
+				% centre = c.GetCellCentre;
 				% Only add these forces to the epithelial cells if they are in the crypt niche
-				if strcmp(class(c), 'SquareCellJoined') && centre(2) < base + obj.nicheRange
+				if strcmp(class(c), 'SquareCellJoined') %&& centre(2) < base + obj.nicheRange
+					if c.DoElementsCross(c.elementLeft, c.elementRight)
+						error('Crossing')
+					end
 					obj.AddCouples(c);
 				end
 

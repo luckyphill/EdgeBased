@@ -6,7 +6,7 @@ classdef DynamicCrypt < LineSimulation
 
 	properties
 
-		dt = 0.002
+		dt = 0.001
 		t = 0
 		eta = 1
 
@@ -116,9 +116,7 @@ classdef DynamicCrypt < LineSimulation
 			obj.AddElementsToList([elementBottom, elementRight, elementTop, elementLeft]);
 
 			% Cell cycle model
-
-			% Must add in WntCutoff calculator to simdata
-			obj.AddSimulationData(WntCutoffFromNiche(stroma, wnt));
+			% Make the cell cycle model
 			ccm = WntCellCycle(p, g, f, obj);
 
 			% Assemble the cell
@@ -199,7 +197,15 @@ classdef DynamicCrypt < LineSimulation
 			% Add the data we'd like to store
 			%---------------------------------------------------
 
-			% obj.AddDataStore(StoreWiggleRatio(10));
+			% Must add in WntCutoff calculator for the cell cycle model
+			obj.AddSimulationData(WntCutoffFromNiche(stroma, wnt));
+
+			% Calculates the position of the crypt bottom
+			obj.AddSimulationData(NicheBottom(stroma));
+
+			% Calculates if divisions have occurred
+			obj.AddSimulationData(CryptDivisions());
+
 
 			%---------------------------------------------------
 			% Add the modfier to keep the stromal corner cells
@@ -223,6 +229,7 @@ classdef DynamicCrypt < LineSimulation
 			obj.AddSimulationData(SpatialState());
 			obj.pathName = sprintf('DynamicCrypt/p%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%ghw%gnh%gnr%gch%gwnt%gan%gag%gpn%gpg%gts%g_seed%g/',p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, halfWidth, nh, nicheRadius, ch, wnt, newArea, grownArea, newPerimeter, grownPrimeter, torsionStiffness, seed);
 			obj.AddDataWriter(WriteSpatialState(100,obj.pathName));
+			obj.AddDataWriter(WriteDivisions(obj.pathName));
 
 			%---------------------------------------------------
 			% All done. Ready to roll
