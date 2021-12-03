@@ -339,6 +339,7 @@ classdef Visualiser < matlab.mixin.SetGet
 
 				title(sprintf('t = %g',obj.timeSteps(i)),'Interpreter', 'latex');
 				F(end+1) = getframe(h);
+				fprintf('Generated frame %d\n',length(F));
 
 			end
 
@@ -366,8 +367,11 @@ classdef Visualiser < matlab.mixin.SetGet
 				frame = F(i) ;    
 				writeVideo(writerObj, frame);
 			end
+
+
 			% close the writer object
 			close(writerObj);
+			fprintf('Generation Complete\n');
 
 		end
 
