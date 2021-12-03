@@ -229,6 +229,7 @@ classdef DynamicCrypt < LineSimulation
 			obj.AddSimulationData(SpatialState());
 			obj.pathName = sprintf('DynamicCrypt/p%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%ghw%gnh%gnr%gch%gwnt%gan%gag%gpn%gpg%gts%g_seed%g/',p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, halfWidth, nh, nicheRadius, ch, wnt, newArea, grownArea, newPerimeter, grownPrimeter, torsionStiffness, seed);
 			obj.AddDataWriter(WriteSpatialState(100,obj.pathName));
+			obj.AddDataWriter(WriteCellCount(100,obj.pathName));
 			obj.AddDataWriter(WriteDivisions(obj.pathName));
 
 			%---------------------------------------------------

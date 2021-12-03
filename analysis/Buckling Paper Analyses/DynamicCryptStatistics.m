@@ -45,8 +45,11 @@ classdef DynamicCryptStatistics < Analysis
 
 			x = nan(size(cells));
 			y = nan(size(cells));
+			a = nan(size(cells));
 
 			t = v.timeSteps;
+			cellCount = nan(size(t));
+			cryptHeight = nan(size(t));
 
 			dt = t(2) - t(1);
 
@@ -65,10 +68,22 @@ classdef DynamicCryptStatistics < Analysis
 
 					x(i,j) = centre(1);
 					y(i,j) = centre(2);
+					if colour ~= 2
+						a(i,j) = polyarea(nodeCoords(:,1), nodeCoords(:,2));
+					end
+					if colour == 5
+						base = sort(nodeCoords(:,2));
+						base(isnan(base)) = [];
+						top = base(end);
+						bot = base(3);
+						cryptHeight(i) = top - bot;
+					end
 
 					j = j + 1;
 
 				end
+
+				cellCount(i) = j-1;
 
 			end
 
@@ -80,7 +95,7 @@ classdef DynamicCryptStatistics < Analysis
 
 
 
-			obj.result = {t, x, y, speed};
+			obj.result = {t, x, y, speed, cellCount, a, cryptHeight};
 
 		end
 
@@ -90,23 +105,51 @@ classdef DynamicCryptStatistics < Analysis
 			x = obj.result{2};
 			y = obj.result{3};
 			speed = obj.result{4};
+			count = obj.result{5};
+			a = obj.result{6};
+			cryptHeight = obj.result{7};
 
+			tI = 1;
 
+			t = t(tI:end);
+			x = x(tI:end,:);
+			y = y(tI:end,:);
+			speed = speed(tI:end);
+			count = count(tI:end);
+			a = a(tI:end,:);
+			cryptHeight = cryptHeight(tI:end);
 
 			h = figure;
 
 			plot3(t,x,y);
 			SavePlot(obj, h, sprintf('Migration'));
 
-			h = figure;
-			ts = speed(:);
-			ty = y(2:end,:);
-			ty = ty(:);
+			% h = figure;
+			% ts = speed(:);
+			% ty = y(2:end,:);
+			% ty = ty(:);
 
-			ty(ts > 1) = [];
-			ts(ts > 1) = [];
-			scatter(ty, ts)
-			SavePlot(obj, h, sprintf('Speed'));
+			% ty(ts > 1) = [];
+			% ts(ts > 1) = [];
+			% scatter(ty, ts)
+			% SavePlot(obj, h, sprintf('Speed'));
+
+			h = figure;
+			plot(t, count);
+			SavePlot(obj, h, sprintf('Count'));
+
+			h = figure;
+			histogram(count);
+			SavePlot(obj, h, sprintf('CountHist'));
+
+
+			h = figure;
+			scatter(a(:), y(:))
+			SavePlot(obj, h, sprintf('Area'));
+
+			h = figure;
+			plot(t, count./cryptHeight);
+			SavePlot(obj, h, sprintf('delta'));
 
 
 		end

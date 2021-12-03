@@ -27,7 +27,8 @@ classdef WriteCellCount < AbstractDataWriter
 			% The simulation t must have a simulation data object
 			% collating the complete spatial state
 
-			obj.data = {t.simData('cellCount').GetData(t)};
+			% obj.data = {t.simData('cellCount').GetData(t)};
+			obj.data = {length(t.cellList)};
 
 		end
 		

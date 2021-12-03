@@ -130,7 +130,7 @@ classdef TumourInMembraneAnalysis < Analysis
 
 			end
 
-			obj.result = {memArea, intArea, memAreaVar, intAreaVar};
+			obj.result = {memArea, intArea, memAreaVar, intAreaVar, allMem, allInt};
 
 			
 		end

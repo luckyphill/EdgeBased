@@ -1,5 +1,4 @@
 classdef SpatialState < AbstractSimulationData
-	% Calculates the wiggle ratio
 
 	properties 
 

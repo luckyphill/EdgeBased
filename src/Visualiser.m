@@ -260,6 +260,7 @@ classdef Visualiser < matlab.mixin.SetGet
 			% varargin 
 			% Arg 1: [indexStart, indexEnd] - a vector of the start and ending indices
 			% Arg 2: plot axis range in the form [xmin,xmax,ymin,ymax]
+			fprintf('Producing a movie and storing it in %s\n',obj.pathToOutput);
 			
 			xyrange = [];
 			indices = [];
