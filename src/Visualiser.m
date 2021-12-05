@@ -28,6 +28,7 @@ classdef Visualiser < matlab.mixin.SetGet
 
 			if isa(v, 'AbstractCellSimulation')
 				
+				v.dataWriters(1).MakeFullPath();
 				obj.pathToSpatialState = v.dataWriters(1).fullPath;
 				rootDir = v.dataWriters(1).rootStorageLocation;
 
@@ -274,8 +275,6 @@ classdef Visualiser < matlab.mixin.SetGet
 					end
 				end
 			end
-
-
 
 			% Currently same as run visualiser, but saves the movie
 
