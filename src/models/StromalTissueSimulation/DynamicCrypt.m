@@ -2,7 +2,7 @@ classdef DynamicCrypt < LineSimulation
 
 	% This simulation gives a crypt-like structure in a "waterbed" type model
 	% It currently uses a quick hack to make the cells stop dividing past a certain height
-	% using WntCellCycle
+	% using WntCellCycleNiche
 
 	properties
 
@@ -117,7 +117,7 @@ classdef DynamicCrypt < LineSimulation
 
 			% Cell cycle model
 			% Make the cell cycle model
-			ccm = WntCellCycle(p, g, f, obj);
+			ccm = WntCellCycleNiche(p, g, f, obj);
 
 			% Assemble the cell
 
@@ -150,7 +150,7 @@ classdef DynamicCrypt < LineSimulation
 
 				obj.AddElementsToList([elementBottom, elementRight, elementTop]);
 
-				ccm = WntCellCycle(p, g, f, obj);
+				ccm = WntCellCycleNiche(p, g, f, obj);
 
 				c = SquareCellJoined(ccm, [elementTop, elementBottom, elementLeft, elementRight], obj.GetNextCellId());
 				c.cellType = epiCellType;
@@ -227,7 +227,7 @@ classdef DynamicCrypt < LineSimulation
 			%---------------------------------------------------
 
 			obj.AddSimulationData(SpatialState());
-			obj.pathName = sprintf('DynamicCrypt/p%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%ghw%gnh%gnr%gch%gwnt%gan%gag%gpn%gpg%gts%g_seed%g/',p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, halfWidth, nh, nicheRadius, ch, wnt, newArea, grownArea, newPerimeter, grownPrimeter, torsionStiffness, seed);
+			obj.pathName = sprintf('DynamicCrypt/p%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%ghw%gnh%gnr%gch%gwnt%gan%gag%gpn%gpg%gts%g_seed%d/',p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, halfWidth, nh, nicheRadius, ch, wnt, newArea, grownArea, newPerimeter, grownPrimeter, torsionStiffness, seed);
 			obj.AddDataWriter(WriteSpatialState(100,obj.pathName));
 			obj.AddDataWriter(WriteCellCount(100,obj.pathName));
 			obj.AddDataWriter(WriteDivisions(obj.pathName));
