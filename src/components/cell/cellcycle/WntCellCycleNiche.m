@@ -94,7 +94,32 @@ classdef WntCellCycleNiche < AbstractCellCycleModel
 
 				end
 
+			else
+				
+				% Hold it in pause phase. Technically the cell is stopped in the niche
+				% or differentiated zone, but its actually just prevented from leaving
+				% pause. If the cell is in the niche it can move into the transient
+				% amplifying region again, and start growth, so we need to keep adjusting
+				% the length of the pause phase so we suddenly don't have an ancient cell
+				% that wants to divide without going through the growth phase
+				obj.pausePhaseDuration = obj.pausePhaseDuration + obj.tissue.dt;
+
+				
+				centre = obj.containingCell.GetCellCentre();
+				% Hacky, assumes the first cell is the stroma, which won't be true in general
+				% but is true for DynamicCrypt
+				heights = [obj.tissue.cellList(1).nodeList.y]; 
+				base = sort(heights);
+				base = base(3);
+				% If the cell is differentiated, it could be in the niche,
+				% so we need to check if it's moved into the transit amplifying region
+				if centre(2) > base + obj.nicheHeight && centre(2) < obj.tissue.simData('wntCutoff').GetData(obj.tissue)
+					obj.differentiated = false;
+					obj.colour = obj.pauseColour;
+				end
+
 			end
+
 
 			if c.cellType == 2
 				% Cell is a mutant
