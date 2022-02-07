@@ -22,10 +22,10 @@ echo "array_job_index: $SLURM_ARRAY_TASK_ID"
 
 i=1 
 found=0 
-while IFS=, read a b c d e f g seed
+while IFS=, read a b c d e f g h j seed
 do 
 	if [ $i = $SLURM_ARRAY_TASK_ID ]; then
-		echo "Running $simName with [$a, $b, $c, $d, $e, $f, $g] seed $seed"
+		echo "Running $simName with [$a, $b, $c, $d, $e, $f, $g, $h, $j] seed $seed"
 		found=1 
 
 		break 
@@ -34,8 +34,8 @@ do
 done < $paramFile
 
 if [ $found = 1 ]; then
-	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath([pwd,'/src']));addpath(genpath([pwd,'/HPC']));addpath(genpath([pwd,'/analysis'])); obj = $simName($a, $b, $c, $d, $e, $f, $g, $seed); obj.GenerateSimulationData(); quit()"
-	matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath([pwd,'/src']));addpath(genpath([pwd,'/HPC']));addpath(genpath([pwd,'/analysis'])); obj = $simName($a, $b, $c, $d, $e, $f, $g, $seed); obj.GenerateSimulationData(); quit()"
+	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath([pwd,'/src']));addpath(genpath([pwd,'/HPC']));addpath(genpath([pwd,'/analysis'])); obj = $simName($a, $b, $c, $d, $e, $f, $g, $h, $j, $seed); obj.GenerateSimulationData(); quit()"
+	matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath([pwd,'/src']));addpath(genpath([pwd,'/HPC']));addpath(genpath([pwd,'/analysis'])); obj = $simName($a, $b, $c, $d, $e, $f, $g, $h, $j, $seed); obj.GenerateSimulationData(); quit()"
 else 
   echo "SLURM_ARRAY_TASK_ID $SLURM_ARRAY_TASK_ID is outside range of input file $paramFile" 
 fi

@@ -113,7 +113,7 @@ classdef ManageDynamicCrypt < MatlabSimulation
 
 		function SimulationCommand(obj)
 
-			obj.simObj.RunToTime(100);
+			obj.simObj.RunToTime(300);
 
 		end
 
