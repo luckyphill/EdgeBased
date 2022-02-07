@@ -133,9 +133,11 @@ classdef DynamicCryptStatistics < Analysis
 			% ts(ts > 1) = [];
 			% scatter(ty, ts)
 			% SavePlot(obj, h, sprintf('Speed'));
-
+			mm = 200;
 			h = figure;
+			hold on;
 			plot(t, count);
+			plot(t, movmean(count,mm))
 			SavePlot(obj, h, sprintf('Count'));
 
 			h = figure;
@@ -148,7 +150,10 @@ classdef DynamicCryptStatistics < Analysis
 			SavePlot(obj, h, sprintf('Area'));
 
 			h = figure;
-			plot(t, count./cryptHeight);
+			hold on;
+			delta = count./cryptHeight;
+			plot(t, delta);
+			plot(t, movmean(delta,mm));
 			SavePlot(obj, h, sprintf('delta'));
 
 

@@ -206,6 +206,9 @@ classdef DynamicCrypt < LineSimulation
 			% Calculates if divisions have occurred
 			obj.AddSimulationData(CryptDivisions());
 
+			% Calculates if divisions have occurred
+			obj.AddSimulationData(CryptHeight(stroma));
+
 
 			%---------------------------------------------------
 			% Add the modfier to keep the stromal corner cells
@@ -235,6 +238,9 @@ classdef DynamicCrypt < LineSimulation
 			%---------------------------------------------------
 			% All done. Ready to roll
 			%---------------------------------------------------
+
+			% A little hack to make the parameter sweeps slightly easier to handle
+			obj.simulationOutputLocation = [getenv('EDGEDIR'),'/SimulationOutput/' obj.pathName];
 
 		end
 
