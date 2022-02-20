@@ -80,10 +80,7 @@ classdef DynamicCrypt < LineSimulation
 
 			obj.AddTissueLevelKiller(k);
 
-			
-			
-
-			[stroma, nodeList, elementList, cornerNodes] = BuildStroma(obj, halfWidth, nicheRadius, nh, cryptSideLength, stromalCellType);
+			[stroma, nodeList, elementList, cornerNodes, anchorEdges] = BuildStroma(obj, halfWidth, nicheRadius, nh, cryptSideLength, stromalCellType);
 
 			obj.AddNodesToList( nodeList );
 			obj.AddElementsToList( elementList );
@@ -185,6 +182,20 @@ classdef DynamicCrypt < LineSimulation
 			att = [0,b;
 				   b,0]; % No attraction between epithelial cells
 			obj.AddNeighbourhoodBasedForce(CellTypeInteractionForce(att, repmat(b,2), repmat(dAsym,2), repmat(dSep,2), repmat(dLim,2), cellTypes, obj.dt, true));
+
+			% A force that makes the anchor edges taught in order to prevent
+			% the crypt from lurching
+			for i = 1:length(anchorEdges)
+				% There are only two edges, but looping future proofs and handles empty lists
+				e = anchorEdges(i);
+				l = e.GetLength();
+
+				% Make the natural length slightly smaller than the starting length
+				% to give it a small amount of tension. This will also allow (or maybe force)
+				% the crypt bottom to push in as the starting transient state disspates
+				e.naturalLength = 0.8 * l;
+			end
+			obj.AddElementBasedForce(EdgeForceSelected(anchorEdges));
 			
 			%---------------------------------------------------
 			% Add space partition
@@ -218,10 +229,10 @@ classdef DynamicCrypt < LineSimulation
 			% nodeList comes from building the stroma
 			obj.AddSimulationModifier(   PinNodes(  cornerNodes  )   );
 
-			% %---------------------------------------------------
-			% % Add the modfier to keep the boundary cells at the
-			% % same vertical position
-			% %---------------------------------------------------
+			%---------------------------------------------------
+			% Add the modfier to keep the boundary cells at the
+			% same vertical position
+			%---------------------------------------------------
 			
 			% obj.AddSimulationModifier(ShiftBoundaryCells());
 
@@ -230,7 +241,7 @@ classdef DynamicCrypt < LineSimulation
 			%---------------------------------------------------
 
 			obj.AddSimulationData(SpatialState());
-			obj.pathName = sprintf('DynamicCrypt/p%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%ghw%gnh%gnr%gch%gwnt%gan%gag%gpn%gpg%gts%g_seed%d/',p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, halfWidth, nh, nicheRadius, ch, wnt, newArea, grownArea, newPerimeter, grownPrimeter, torsionStiffness, seed);
+			obj.pathName = sprintf('DynamicCrypt/p%gg%gb%gsae%gspe%gf%gda%gds%gdl%galpha%gbeta%gt%ghw%gnh%gnr%gch%gwnt%gan%gag%gpn%gpg%gts%ganch_seed%d/',p,g,b,sae,spe,f,dAsym,dSep, dLim, areaEnergy, perimeterEnergy, tensionEnergy, halfWidth, nh, nicheRadius, ch, wnt, newArea, grownArea, newPerimeter, grownPrimeter, torsionStiffness, seed);
 			obj.AddDataWriter(WriteSpatialState(100,obj.pathName));
 			obj.AddDataWriter(WriteCellCount(100,obj.pathName));
 			obj.AddDataWriter(WriteDivisions(obj.pathName));
@@ -244,7 +255,7 @@ classdef DynamicCrypt < LineSimulation
 
 		end
 
-		function [stroma, nodeList, elementList, cornerNodes] = BuildStroma(obj, halfWidth, nicheRadius, nicheHeight, cryptSideLength, stromalCellType)
+		function [stroma, nodeList, elementList, cornerNodes, anchorEdges] = BuildStroma(obj, halfWidth, nicheRadius, nicheHeight, cryptSideLength, stromalCellType)
 
 			% Produces a stroma with crypt shape for the crypt cells
 			% Total width is 2 x halfWidth
@@ -290,6 +301,9 @@ classdef DynamicCrypt < LineSimulation
 
 			end
 
+			% This gets the index of the node at the bottom
+			botI = length(x);
+
 			% Make the vector of positions
 			% the indices (1:end-1) stop it from repeating the bottom centre node
 			pos = [x',y';-flipud(x(1:end-1)'),flipud(y(1:end-1)')];
@@ -333,6 +347,20 @@ classdef DynamicCrypt < LineSimulation
 			end
 
 			stroma.cellData('targetPerimeter') = TargetPerimeterStroma(perim);
+
+			% After the stroma is set up completely, add in some edges to anchor the
+			% bottom of the crypt in place
+
+			leftAnchor = Element(nodeList(botI), nodeList(end-1), obj.GetNextElementId());
+			riteAnchor = Element(nodeList(botI), nodeList(end  ), obj.GetNextElementId());
+
+			leftAnchor.internal = true;
+			riteAnchor.internal = true;
+
+			elementList = [elementList, leftAnchor, riteAnchor];
+
+			anchorEdges = Element.empty();
+			anchorEdges = [leftAnchor, riteAnchor]; % Comment this line to turn off the anchor edge affect
 
 			cornerNodes = [nodeList(1), nodeList(end-2:end)];
 
