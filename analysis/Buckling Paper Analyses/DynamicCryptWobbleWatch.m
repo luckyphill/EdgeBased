@@ -19,7 +19,7 @@ classdef DynamicCryptWobbleWatch < Analysis
 		f	= 0.8;
 
 		% Force parameters
-		b	= 20;
+		b	= 10;
 		sae	= 50;
 		spe	= [10,20,30];
 
