@@ -1002,6 +1002,90 @@ classdef Visualiser < matlab.mixin.SetGet
 
 		end
 
+		function VisualiseWireframe(obj, varargin)
+
+			% varargin 
+			% Arg 1: [indexStart, indexEnd] - a vector of the start and ending indices. Leave empty to run the whole simulation
+			% Arg 2: plot axis range in the form [xmin,xmax,ymin,ymax]
+
+			xyrange = [];
+			indices = [];
+			if ~isempty(varargin)
+				indices = varargin{1};
+				if length(varargin) > 1
+					xyrange = varargin{2};
+				end
+			end
+
+			h = figure();
+			axis equal
+			hold on
+
+			if ~isempty(xyrange)
+				xlim(xyrange(1:2));
+				ylim(xyrange(3:4));
+			end
+
+			edges = obj.elements;
+			I = size(edges,1);
+
+			lw = 2;
+
+			% Initialise the array with anything
+			lineObjects(1)  = line([1,1],[2,2],'Color', 'k', 'LineWidth', lw);
+
+			startI =  1;
+			endI = I;
+			if ~isempty(indices)
+				startI = indices(1);
+				endI = indices(2);
+			end
+
+			for i = startI:endI
+				
+				% First draw node cells
+
+				J = size(squeeze(edges(i,:,:)),1);
+				j = 1; % loops node cells
+				while j <= J && ~isnan(edges(i,j,1))
+
+
+					ids = squeeze(edges(i,j,:));
+
+					nodeCoords = squeeze(obj.nodes(ids,i,:));
+					x = nodeCoords(:,1);
+					y = nodeCoords(:,2);
+
+					x(end+1) = x(1);
+					y(end+1) = y(1);
+
+					if j > length(lineObjects)
+						lineObjects(j) = line(x,y, 'Color', 'k', 'LineWidth', lw);
+					else
+						lineObjects(j).XData = x;
+						lineObjects(j).YData = y;
+					end
+
+
+
+					j = j + 1;
+
+				end
+				% j will always end up being 1 more than the total number of non empty cells
+
+				for k = length(lineObjects):-1:j
+					lineObjects(k).delete;
+					lineObjects(k) = [];
+				end
+
+				drawnow
+				title(sprintf('t = %g',obj.timeSteps(i)),'Interpreter', 'latex');
+				pause(0.1);
+
+			end
+
+		end
+
 		function ProduceNodesAndEdgesMovie(obj, r, varargin)
 
 
