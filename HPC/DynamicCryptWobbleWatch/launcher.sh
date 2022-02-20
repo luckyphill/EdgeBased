@@ -1,1 +1,1 @@
-sbatch --array=0-54 --time=24:00:00 ../generalSbatch9seed.sh ManageDynamicCrypt DynamicCryptWobbleWatch.txt 
+sbatch --array=0-54 --time=72:00:00 ../generalSbatch9seed.sh ManageDynamicCrypt DynamicCryptWobbleWatch.txt 
