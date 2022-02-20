@@ -91,9 +91,9 @@ classdef Visualiser < matlab.mixin.SetGet
 			if strcmp(opts.VariableTypes{1}, 'char')
 				opts = setvartype(opts, opts.VariableNames{1}, 'double');
 			end
-			% nodeData = readmatrix([obj.pathToSpatialState, 'nodes.csv'],opts);
-			nodeData = dlmread([obj.pathToSpatialState, 'nodes.csv']);
-			nodeData(nodeData == 0) = nan;
+			nodeData = readmatrix([obj.pathToSpatialState, 'nodes.csv'],opts);
+			% nodeData = dlmread([obj.pathToSpatialState, 'nodes.csv']);
+			% nodeData(nodeData == 0) = nan;
 
 			opts = detectImportOptions([obj.pathToSpatialState, 'elements.csv']);
 			opts.DataLines = [1 Inf];
