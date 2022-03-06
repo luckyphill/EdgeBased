@@ -10,7 +10,6 @@ classdef NicheCornerCorrectorForce < AbstractCellBasedForce
 	properties
 
 		cornerSpringRate
-		stroma			% a pointer to the cell acting as a stroma
 		nicheRange		% The approximate range above the crypt bottom where we should
 						% look for trapezoidal cells. This is probably the only location
 						% where there is risk of cells misbehaving, so we avoid applying
@@ -22,11 +21,9 @@ classdef NicheCornerCorrectorForce < AbstractCellBasedForce
 
 	methods
 
-		function obj = NicheCornerCorrectorForce(cornerP, stroma, nicheRange)
+		function obj = NicheCornerCorrectorForce(cornerP, nicheRange)
 
 			obj.cornerSpringRate = cornerP;
-
-			obj.stroma = stroma;
 
 			obj.nicheRange = nicheRange;
 
@@ -36,10 +33,6 @@ classdef NicheCornerCorrectorForce < AbstractCellBasedForce
 
 			% For each cell in the list, calculate the forces
 			% and add them to the nodes
-
-			% heights = [obj.stroma.nodeList.y];
-			% base = sort(heights);
-			% base = base(3);
 
 			for i = 1:length(cellList)
 				c = cellList(i);
