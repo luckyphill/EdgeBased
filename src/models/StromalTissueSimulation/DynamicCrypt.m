@@ -80,11 +80,12 @@ classdef DynamicCrypt < LineSimulation
 
 			obj.AddTissueLevelKiller(k);
 
-			[stroma, nodeList, elementList, cornerNodes, anchorEdges] = BuildStroma(obj, halfWidth, nicheRadius, nh, cryptSideLength, stromalCellType);
+			% [stroma, nodeList, edgeList, fixedNodes, anchorEdges] = BuildStroma(obj, halfWidth, nicheRadius, nh, cryptSideLength, stromalCellType);
+			[stromaCells, nodeList, edgeList, fixedNodes] = BuildMultiStroma(obj, halfWidth, nicheRadius, nh, cryptSideLength, stromalCellType);
 
 			obj.AddNodesToList( nodeList );
-			obj.AddElementsToList( elementList );
-			obj.cellList = [stroma];
+			obj.AddElementsToList( edgeList );
+			obj.cellList = [stromaCells];
 
 
 			%---------------------------------------------------
@@ -171,10 +172,14 @@ classdef DynamicCrypt < LineSimulation
 			obj.AddCellBasedForce(PolygonCellGrowthForce(areaEnergy, perimeterEnergy, tensionEnergy));
 
 			% A special distinct force for the stroma
-			obj.AddCellBasedForce(StromaStructuralForce(stroma, sae, spe, 0));
+			% obj.AddCellBasedForce(StromaStructuralForce(stromaCells, sae, spe, 0));
+			% For multistroma
+			for i = 1:length(stromaCells)
+				obj.AddCellBasedForce(StromaStructuralForce(stromaCells(i), sae, spe, 0));
+			end
 
 			% A force to help stop the crypt niche cells from crossing
-			obj.AddCellBasedForce(NicheCornerCorrectorForce(torsionStiffness, stroma, 2*nicheRadius));
+			obj.AddCellBasedForce(NicheCornerCorrectorForce(torsionStiffness, 2*nicheRadius));
 
 			% Node-Element interaction force - requires a SpacePartition
 			% Handles different interaction strengths between different cell types
@@ -183,19 +188,24 @@ classdef DynamicCrypt < LineSimulation
 				   b,0]; % No attraction between epithelial cells
 			obj.AddNeighbourhoodBasedForce(CellTypeInteractionForce(att, repmat(b,2), repmat(dAsym,2), repmat(dSep,2), repmat(dLim,2), cellTypes, obj.dt, true));
 
-			% A force that makes the anchor edges taught in order to prevent
-			% the crypt from lurching
-			for i = 1:length(anchorEdges)
-				% There are only two edges, but looping future proofs and handles empty lists
-				e = anchorEdges(i);
-				l = e.GetLength();
 
-				% Make the natural length slightly smaller than the starting length
-				% to give it a small amount of tension. This will also allow (or maybe force)
-				% the crypt bottom to push in as the starting transient state disspates
-				e.naturalLength = 0.8 * l;
-			end
-			obj.AddElementBasedForce(EdgeForceSelected(anchorEdges));
+			%---------------------------------------------------
+			% Special anchor forces
+			%---------------------------------------------------
+
+			% % A force that makes the anchor edges taught in order to prevent
+			% % the crypt from lurching
+			% for i = 1:length(anchorEdges)
+			% 	% There are only two edges, but looping future proofs and handles empty lists
+			% 	e = anchorEdges(i);
+			% 	l = e.GetLength();
+
+			% 	% Make the natural length slightly smaller than the starting length
+			% 	% to give it a small amount of tension. This will also allow (or maybe force)
+			% 	% the crypt bottom to push in as the starting transient state disspates
+			% 	e.naturalLength = 0.8 * l;
+			% end
+			% obj.AddElementBasedForce(EdgeForceSelected(anchorEdges));
 			
 			%---------------------------------------------------
 			% Add space partition
@@ -209,16 +219,16 @@ classdef DynamicCrypt < LineSimulation
 			%---------------------------------------------------
 
 			% Must add in WntCutoff calculator for the cell cycle model
-			obj.AddSimulationData(WntCutoffFromNiche(stroma, wnt));
+			obj.AddSimulationData(WntCutoffFromNiche(stromaCells(1), wnt));
 
 			% Calculates the position of the crypt bottom
-			obj.AddSimulationData(NicheBottom(stroma));
+			obj.AddSimulationData(NicheBottom(stromaCells(1)));
 
 			% Calculates if divisions have occurred
 			obj.AddSimulationData(CryptDivisions());
 
 			% Calculates if divisions have occurred
-			obj.AddSimulationData(CryptHeight(stroma));
+			obj.AddSimulationData(CryptHeight(stromaCells(1)));
 
 
 			%---------------------------------------------------
@@ -227,7 +237,7 @@ classdef DynamicCrypt < LineSimulation
 			%---------------------------------------------------
 			
 			% nodeList comes from building the stroma
-			obj.AddSimulationModifier(   PinNodes(  cornerNodes  )   );
+			obj.AddSimulationModifier(   PinNodes(  fixedNodes  )   );
 
 			%---------------------------------------------------
 			% Add the modfier to keep the boundary cells at the
@@ -255,7 +265,7 @@ classdef DynamicCrypt < LineSimulation
 
 		end
 
-		function [stroma, nodeList, elementList, cornerNodes, anchorEdges] = BuildStroma(obj, halfWidth, nicheRadius, nicheHeight, cryptSideLength, stromalCellType)
+		function [stroma, nodeList, edgeList, cornerNodes, anchorEdges] = BuildStroma(obj, halfWidth, nicheRadius, nicheHeight, cryptSideLength, stromalCellType)
 
 			% Produces a stroma with crypt shape for the crypt cells
 			% Total width is 2 x halfWidth
@@ -323,17 +333,17 @@ classdef DynamicCrypt < LineSimulation
 				nodeList(end+1) = Node(pos(i,1), pos(i,2), obj.GetNextNodeId());
 			end
 			
-			elementList = Element.empty();
+			edgeList = Element.empty();
 			for i = 1:length(nodeList)-1
-				elementList(end + 1) = Element(nodeList(i), nodeList(i+1), obj.GetNextElementId() );
+				edgeList(end + 1) = Element(nodeList(i), nodeList(i+1), obj.GetNextElementId() );
 			end
 
-			elementList(end + 1) = Element(nodeList(end), nodeList(1), obj.GetNextElementId() );
+			edgeList(end + 1) = Element(nodeList(end), nodeList(1), obj.GetNextElementId() );
 
 			ccm = NoCellCycle();
 			ccm.colour = stromalCellType;
 
-			stroma = CellFree(ccm, nodeList, elementList, obj.GetNextCellId());
+			stroma = CellFree(ccm, nodeList, edgeList, obj.GetNextCellId());
 
 			% Critical to stop the ChasteNagaiHondaForce beign applied to the stroma
 			stroma.cellType = stromalCellType;
@@ -342,8 +352,8 @@ classdef DynamicCrypt < LineSimulation
 			stroma.grownCellTargetArea = polyarea(pos(:,1), pos(:,2));
 
 			perim = 0;
-			for i = 1:length(elementList)
-				perim = perim + elementList(i).GetLength();
+			for i = 1:length(edgeList)
+				perim = perim + edgeList(i).GetLength();
 			end
 
 			stroma.cellData('targetPerimeter') = TargetPerimeterStroma(perim);
@@ -357,12 +367,201 @@ classdef DynamicCrypt < LineSimulation
 			leftAnchor.internal = true;
 			riteAnchor.internal = true;
 
-			elementList = [elementList, leftAnchor, riteAnchor];
+			edgeList = [edgeList, leftAnchor, riteAnchor];
 
 			anchorEdges = Element.empty();
 			anchorEdges = [leftAnchor, riteAnchor]; % Comment this line to turn off the anchor edge affect
 
 			cornerNodes = [nodeList(1), nodeList(end-2:end)];
+
+		end
+
+		function [cells, nodeList, edgeList, fixedNodes] = BuildMultiStroma(obj, halfWidth, nicheRadius, nicheHeight, cryptSideLength, stromalCellType)
+
+			% Produces a stroma with crypt shape for the crypt cells
+			% contining three distinct, but joined stromal cells
+			% Total width is 2 x halfWidth
+			% Total height is nicheHeight + cryptSideLength + nicheRadius + corner radius (re)
+			% Crypt width is 2 x radius
+
+			% Returns the stromal cells, and a vector of nodes that mark the corners, so they
+			% can be pinned in place
+
+			%---------------------------------------------------
+			% Make the nodes for the stroma
+			%---------------------------------------------------
+
+			totalHeight = nicheHeight + nicheRadius + cryptSideLength;
+			dx = 0.25; % The length of the edges not on the curved part
+
+			x = [];
+			y = [];
+
+			% Go along the top
+			for X = halfWidth:-dx:nicheRadius
+
+				x(end + 1) = X;
+				y(end + 1) = totalHeight;
+
+			end
+
+			% Then down the side
+
+			for Y = (totalHeight-dx):-dx:(nicheHeight+nicheRadius)
+
+				x(end + 1) = nicheRadius;
+				y(end + 1) = Y;
+
+			end
+
+			% Then around the curve
+			n = 10;
+			for theta = -pi/(2*n):-pi/(2*n):-pi/2
+
+				x(end + 1) = nicheRadius * cos(theta);
+				y(end + 1) = (nicheHeight + nicheRadius) + nicheRadius * sin(theta);
+
+			end
+
+			% This gets the index of the node at the bottom
+			botI = length(x);
+
+			% Make the vector of positions
+			% the indices (1:end-1) stop it from repeating the bottom centre node
+			% pos = [x',y';-flipud(x(1:end-1)'),flipud(y(1:end-1)')];
+
+			% The positions of the node for the three cells
+			posR = [x(1:end-1)',y(1:end-1)'];
+			posL = [-flipud(x(1:end-1)'), flipud(y(1:end-1)')];
+			posBL = [-halfWidth,0];
+			posBR = [halfWidth,0];
+			posC = [x(end), y(end)];
+
+			%---------------------------------------------------
+			% Make the node that build the stromal cells
+			%---------------------------------------------------
+
+			nlR = Node.empty();
+			nlL = Node.empty();
+
+			for i = 1:size(posR,1)
+				nlR(end+1) = Node(posR(i,1), posR(i,2), obj.GetNextNodeId());
+			end
+			for i = 1:size(posL,1)
+				nlL(end+1) = Node(posL(i,1), posL(i,2), obj.GetNextNodeId());
+			end
+			
+			nlBL = Node(posBL(1,1), posBL(1,2), obj.GetNextNodeId());
+			nlBR = Node(posBR(1,1), posBR(1,2), obj.GetNextNodeId());
+			nlC = Node(posC(1,1), posC(1,2), obj.GetNextNodeId());
+
+			nodeListL = [nlC, nlL, nlBL];
+			nodeListR = [nlC, nlBR, nlR];
+			nodeListB = [nlC, nlBL, nlBR];
+
+			posListL = [posC; posL; posBL];
+			posListR = [posC; posBR; posR];
+			posListB = [posC; posBL; posBR];
+
+			%---------------------------------------------------
+			% Make the edges that build the stromal cells
+			%---------------------------------------------------
+
+			edgeListL = Element.empty();
+			edgeListR = Element.empty();
+			edgeListB = Element.empty();
+
+			for i = 1:length(nodeListL)-1
+				edgeListL(end + 1) = Element(nodeListL(i), nodeListL(i+1), obj.GetNextElementId() );
+			end
+			edgeListL(end + 1) = Element(nodeListL(end), nodeListL(1), obj.GetNextElementId() );
+
+			for i = 1:length(nodeListR)-1
+				edgeListR(end + 1) = Element(nodeListR(i), nodeListR(i+1), obj.GetNextElementId() );
+			end
+			edgeListR(end + 1) = Element(nodeListR(end), nodeListR(1), obj.GetNextElementId() );
+
+			for i = 1:length(nodeListB)-1
+				edgeListB(end + 1) = Element(nodeListB(i), nodeListB(i+1), obj.GetNextElementId() );
+			end
+			edgeListB(end + 1) = Element(nodeListB(end), nodeListB(1), obj.GetNextElementId() );
+
+			%---------------------------------------------------
+			% Make the Left stroma
+			%---------------------------------------------------
+
+			ccmL = NoCellCycle();
+			ccmL.colour = stromalCellType;
+
+			stromaL = CellFree(ccmL, nodeListL, edgeListL, obj.GetNextCellId());
+
+			% Critical to stop the ChasteNagaiHondaForce beign applied to the stroma
+			stromaL.cellType = stromalCellType;
+
+			% Make a maltab polygon to exploit the area and perimeter calculation
+			stromaL.grownCellTargetArea = polyarea(posListL(:,1), posListL(:,2));
+
+			perim = 0;
+			for i = 1:length(edgeListL)
+				perim = perim + edgeListL(i).GetLength();
+			end
+
+			stromaL.cellData('targetPerimeter') = TargetPerimeterStroma(perim);
+
+			%---------------------------------------------------
+			% Make the Right stroma
+			%---------------------------------------------------
+
+			ccmR = NoCellCycle();
+			ccmR.colour = stromalCellType;
+
+			stromaR = CellFree(ccmR, nodeListR, edgeListR, obj.GetNextCellId());
+
+			% Critical to stop the ChasteNagaiHondaForce beign applied to the stroma
+			stromaR.cellType = stromalCellType;
+
+			% Make a maltab polygon to exploit the area and perimeter calculation
+			stromaR.grownCellTargetArea = polyarea(posListR(:,1), posListR(:,2));
+
+			perim = 0;
+			for i = 1:length(edgeListR)
+				perim = perim + edgeListR(i).GetLength();
+			end
+
+			stromaR.cellData('targetPerimeter') = TargetPerimeterStroma(perim);
+
+
+			%---------------------------------------------------
+			% Make the Bottom stroma
+			%---------------------------------------------------
+
+			ccmB = NoCellCycle();
+			ccmB.colour = stromalCellType;
+
+			stromaB = CellFree(ccmB, nodeListB, edgeListB, obj.GetNextCellId());
+
+			% Critical to stop the ChasteNagaiHondaForce beign applied to the stroma
+			stromaB.cellType = stromalCellType;
+
+			% Make a maltab polygon to exploit the area and perimeter calculation
+			stromaB.grownCellTargetArea = polyarea(posListB(:,1), posListB(:,2));
+
+			perim = 0;
+			for i = 1:length(edgeListB)
+				perim = perim + edgeListB(i).GetLength();
+			end
+
+			stromaB.cellData('targetPerimeter') = TargetPerimeterStroma(perim);
+
+			%---------------------------------------------------
+			% Construct the return vectors
+			%---------------------------------------------------
+
+			cells = [stromaL, stromaR, stromaB];
+			nodeList = [nodeListL, nodeListR, nodeListB];
+			edgeList = [edgeListL, edgeListR, edgeListB];
+
+			fixedNodes = [nlBL, nlBR];
 
 		end
 
