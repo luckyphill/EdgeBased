@@ -174,9 +174,13 @@ classdef DynamicCrypt < LineSimulation
 			% A special distinct force for the stroma
 			% obj.AddCellBasedForce(StromaStructuralForce(stromaCells, sae, spe, 0));
 			% For multistroma
-			for i = 1:length(stromaCells)
-				obj.AddCellBasedForce(StromaStructuralForce(stromaCells(i), sae, spe, 0));
-			end
+			% for i = 1:length(stromaCells)
+			% 	obj.AddCellBasedForce(StromaStructuralForce(stromaCells(i), sae, spe, 0));
+			% end
+			% Give specific params to each segment
+			obj.AddCellBasedForce(StromaStructuralForce(stromaCells(1), sae, spe, 0));
+			obj.AddCellBasedForce(StromaStructuralForce(stromaCells(2), sae, spe, 0));
+			obj.AddCellBasedForce(StromaStructuralForce(stromaCells(3), sae/10, spe, 0));
 
 			% A force to help stop the crypt niche cells from crossing
 			obj.AddCellBasedForce(NicheCornerCorrectorForce(torsionStiffness, 2*nicheRadius));
@@ -561,7 +565,7 @@ classdef DynamicCrypt < LineSimulation
 			nodeList = [nodeListL, nodeListR, nodeListB];
 			edgeList = [edgeListL, edgeListR, edgeListB];
 
-			fixedNodes = [nlBL, nlBR];
+			fixedNodes = [nlBL, nlBR, nlR(1), nlL(end)];
 
 		end
 
