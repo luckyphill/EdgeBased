@@ -174,7 +174,7 @@ classdef DynamicCrypt < LineSimulation
 			obj.AddCellBasedForce(StromaStructuralForce(stroma, sae, spe, 0));
 
 			% A force to help stop the crypt niche cells from crossing
-			obj.AddCellBasedForce(NicheCornerCorrectorForce(torsionStiffness, stroma, 2*nicheRadius));
+			obj.AddCellBasedForce(NicheCornerCorrectorForce(torsionStiffness, 2*nicheRadius));
 
 			% Node-Element interaction force - requires a SpacePartition
 			% Handles different interaction strengths between different cell types
@@ -193,7 +193,7 @@ classdef DynamicCrypt < LineSimulation
 				% Make the natural length slightly smaller than the starting length
 				% to give it a small amount of tension. This will also allow (or maybe force)
 				% the crypt bottom to push in as the starting transient state disspates
-				e.naturalLength = 0.8 * l;
+				e.naturalLength = 0.95 * l;
 			end
 			obj.AddElementBasedForce(EdgeForceSelected(anchorEdges));
 			
@@ -283,6 +283,9 @@ classdef DynamicCrypt < LineSimulation
 
 			end
 
+			% Grab the index of the sharp corner
+			cornIR = length(x);
+
 			% Then down the side
 
 			for Y = (totalHeight-dx):-dx:(nicheHeight+nicheRadius)
@@ -307,6 +310,12 @@ classdef DynamicCrypt < LineSimulation
 			% Make the vector of positions
 			% the indices (1:end-1) stop it from repeating the bottom centre node
 			pos = [x',y';-flipud(x(1:end-1)'),flipud(y(1:end-1)')];
+
+			% Get the index of the left sharp corner
+			% The vector is mirrored about the bottom node, so the
+			% left corner will be the same distance from the end as
+			% the right corner is from the start
+			cornIL = length(pos(1:end-cornIR+1,:));
 
 			% Add in the missing bottom corner positions
 
@@ -351,16 +360,23 @@ classdef DynamicCrypt < LineSimulation
 			% After the stroma is set up completely, add in some edges to anchor the
 			% bottom of the crypt in place
 
-			leftAnchor = Element(nodeList(botI), nodeList(end-1), obj.GetNextElementId());
-			riteAnchor = Element(nodeList(botI), nodeList(end  ), obj.GetNextElementId());
+			leftAnchor1 = Element(nodeList(botI), nodeList(end-1), obj.GetNextElementId());
+			riteAnchor1 = Element(nodeList(botI), nodeList(end  ), obj.GetNextElementId());
 
-			leftAnchor.internal = true;
-			riteAnchor.internal = true;
+			% And add in some edges to anchor the top of the crypt
+			leftAnchor2 = Element(nodeList(cornIL), nodeList(end-1), obj.GetNextElementId());
+			riteAnchor2 = Element(nodeList(cornIR), nodeList(end  ), obj.GetNextElementId());
 
-			elementList = [elementList, leftAnchor, riteAnchor];
+			leftAnchor1.internal = true;
+			riteAnchor1.internal = true;
+
+			leftAnchor2.internal = true;
+			riteAnchor2.internal = true;
+
+			elementList = [elementList, leftAnchor1, riteAnchor1, leftAnchor2, riteAnchor2];
 
 			anchorEdges = Element.empty();
-			anchorEdges = [leftAnchor, riteAnchor]; % Comment this line to turn off the anchor edge affect
+			anchorEdges = [leftAnchor1, riteAnchor1, leftAnchor2, riteAnchor2]; % Comment this line to turn off the anchor edge affect
 
 			cornerNodes = [nodeList(1), nodeList(end-2:end)];
 
