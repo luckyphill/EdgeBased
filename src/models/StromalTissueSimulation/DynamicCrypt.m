@@ -80,7 +80,7 @@ classdef DynamicCrypt < LineSimulation
 
 			obj.AddTissueLevelKiller(k);
 
-			[stroma, nodeList, elementList, cornerNodes, anchorEdges] = BuildStroma(obj, halfWidth, nicheRadius, nh, cryptSideLength, stromalCellType);
+			[stroma, nodeList, elementList, fixedNodes, anchorEdges] = BuildStroma(obj, halfWidth, nicheRadius, nh, cryptSideLength, stromalCellType);
 
 			obj.AddNodesToList( nodeList );
 			obj.AddElementsToList( elementList );
@@ -227,7 +227,7 @@ classdef DynamicCrypt < LineSimulation
 			%---------------------------------------------------
 			
 			% nodeList comes from building the stroma
-			obj.AddSimulationModifier(   PinNodes(  cornerNodes  )   );
+			obj.AddSimulationModifier(   PinNodes(  fixedNodes  )   );
 
 			%---------------------------------------------------
 			% Add the modfier to keep the boundary cells at the
@@ -255,7 +255,7 @@ classdef DynamicCrypt < LineSimulation
 
 		end
 
-		function [stroma, nodeList, elementList, cornerNodes, anchorEdges] = BuildStroma(obj, halfWidth, nicheRadius, nicheHeight, cryptSideLength, stromalCellType)
+		function [stroma, nodeList, elementList, fixedNodes, anchorEdges] = BuildStroma(obj, halfWidth, nicheRadius, nicheHeight, cryptSideLength, stromalCellType)
 
 			% Produces a stroma with crypt shape for the crypt cells
 			% Total width is 2 x halfWidth
@@ -378,7 +378,7 @@ classdef DynamicCrypt < LineSimulation
 			anchorEdges = Element.empty();
 			anchorEdges = [leftAnchor1, riteAnchor1, leftAnchor2, riteAnchor2]; % Comment this line to turn off the anchor edge affect
 
-			cornerNodes = [nodeList(1), nodeList(end-2:end)];
+			fixedNodes = [nodeList(1), nodeList(end-2:end)];
 
 		end
 
