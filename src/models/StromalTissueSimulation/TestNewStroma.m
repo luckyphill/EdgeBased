@@ -106,6 +106,10 @@ classdef TestNewStroma < LineSimulation
 			% Returns the stromal cell, and a vector of nodes that mark the corners, so they
 			% can be pinned in place
 
+			% No anchoring in this test
+			anchorEdges = Element.empty();
+
+
 			%---------------------------------------------------
 			% Make the nodes for the stroma
 			%---------------------------------------------------
