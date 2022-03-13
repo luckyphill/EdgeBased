@@ -81,7 +81,7 @@ classdef DynamicCrypt < LineSimulation
 			obj.AddTissueLevelKiller(k);
 
 			% [stroma, nodeList, edgeList, fixedNodes, anchorEdges] = BuildStroma(obj, halfWidth, nicheRadius, nh, cryptSideLength, stromalCellType);
-			[stromaCells, nodeList, edgeList, fixedNodes] = BuildMultiStroma(obj, halfWidth, nicheRadius, nh, cryptSideLength, stromalCellType);
+			[stromaCells, nodeList, edgeList, fixedNodes] = BuildSplitStroma(obj, halfWidth, nicheRadius, nh, cryptSideLength, stromalCellType);
 
 			obj.AddNodesToList( nodeList );
 			obj.AddElementsToList( edgeList );
@@ -180,7 +180,7 @@ classdef DynamicCrypt < LineSimulation
 			% Give specific params to each segment
 			obj.AddCellBasedForce(StromaStructuralForce(stromaCells(1), sae, spe, 0));
 			obj.AddCellBasedForce(StromaStructuralForce(stromaCells(2), sae, spe, 0));
-			obj.AddCellBasedForce(StromaStructuralForce(stromaCells(3), sae/10, spe, 0));
+			% obj.AddCellBasedForce(StromaStructuralForce(stromaCells(3), sae/10, spe, 0));
 
 			% A force to help stop the crypt niche cells from crossing
 			obj.AddCellBasedForce(NicheCornerCorrectorForce(torsionStiffness, 2*nicheRadius));
@@ -566,6 +566,170 @@ classdef DynamicCrypt < LineSimulation
 			edgeList = [edgeListL, edgeListR, edgeListB];
 
 			fixedNodes = [nlBL, nlBR, nlR(1), nlL(end)];
+
+		end
+
+		function [stroma, nodeList, edgeList, fixedNodes] = BuildSplitStroma(obj, halfWidth, nicheRadius, nicheHeight, cryptSideLength, stromalCellType)
+
+			% Produces a stroma with crypt shape for the crypt cells
+			% Total width is 2 x halfWidth
+			% Total height is nicheHeight + cryptSideLength + nicheRadius + corner radius (re)
+			% Crypt width is 2 x radius
+
+			% Returns the stromal cell, and a vector of nodes that mark the corners, so they
+			% can be pinned in place
+
+			% No anchoring in this test
+			anchorEdges = Element.empty();
+
+
+			%---------------------------------------------------
+			% Make the nodes for the stroma
+			%---------------------------------------------------
+
+			totalHeight = nicheHeight + nicheRadius + cryptSideLength;
+			dx = 0.25; % The length of the edges not on the curved part
+
+			x = [];
+			y = [];
+
+			% Go along the top
+			for X = halfWidth:-dx:nicheRadius
+
+				x(end + 1) = X;
+				y(end + 1) = totalHeight;
+
+			end
+
+
+			% Then down the side
+
+			for Y = (totalHeight-dx):-dx:(nicheHeight+nicheRadius)
+
+				x(end + 1) = nicheRadius;
+				y(end + 1) = Y;
+
+			end
+
+			% Then around the curve
+			n = 10;
+			for theta = -pi/(2*n):-pi/(2*n):-pi/2
+
+				x(end + 1) = nicheRadius * cos(theta);
+				y(end + 1) = (nicheHeight + nicheRadius) + nicheRadius * sin(theta);
+
+			end
+
+			% This gets the index of the node at the bottom of the crypt
+			botI1 = length(x);
+
+			% Make the vector of positions
+			% the indices (1:end-1) stop it from repeating the bottom centre node
+			pos = [x',y';-flipud(x(1:end-1)'),flipud(y(1:end-1)')];
+
+			% Add in the missing bottom positions
+
+			pos = [pos;-halfWidth,0;0,0;halfWidth,0];
+			posR = [x',y';0,0;halfWidth,0];
+			posL = [-flipud(x'),flipud(y');-halfWidth,0;0,0];
+
+			% This gets the index of the node at the bottom of the stromal slab
+			botI2 = size(pos,1)-1;
+
+			%---------------------------------------------------
+			% Make the cells that acts as the stroma
+			%---------------------------------------------------
+			
+			nodeList = Node.empty();
+
+			% Nodes are easy, just make one for each position
+			for i = 1:length(pos)
+				nodeList(end+1) = Node(pos(i,1), pos(i,2), obj.GetNextNodeId());
+			end
+			
+			% Need to make node lists for the left and right stromal sections
+			nodesR = [nodeList(1:botI1), nodeList(botI2:end)];
+			nodesL = nodeList(botI1:botI2);
+
+			% Make left edges except for last one
+			edgesL = Element.empty();
+			for i = 1:length(nodesL)-1
+				edgesL(end + 1) = Element(nodesL(i), nodesL(i+1), obj.GetNextElementId() );
+			end
+
+			%Make right edges except for last one
+			edgesR = Element.empty();
+			% Start with the bottom and side edges so we can keep anticlockwise ordering
+			edgesR(end + 1) = Element(nodesR(end-1), nodesR(end), obj.GetNextElementId() );
+			edgesR(end + 1) = Element(nodesR(end), nodesR(1), obj.GetNextElementId() );
+			% Then go around until the bottom of the crypt
+			for i = 1:length(nodesR(1:botI1))-1
+				edgesR(end + 1) = Element(nodesR(i), nodesR(i+1), obj.GetNextElementId() );
+			end
+			
+			% Now make the shared edge
+			% This will put the nodes in the correct order to be anticlockwise
+			% for the right cell only
+			edgeShared = Element(nodeList(botI1), nodeList(botI2), obj.GetNextElementId() );
+
+			% Set the shared edge to internal so it doesn't interact with anything as an edge
+			edgeShared.internal = true;
+
+			% Use the existing edge vectors to construct the full edge list and avoid
+			% duplicating the shared edge
+			edgeList = [edgesR, edgesL, edgeShared];
+
+			% Now make the complete edge lists for the two cells
+
+			edgesR = [edgesR, edgeShared];
+			edgesL = [edgesL, edgeShared];
+
+
+			% Now construct the two cells
+
+
+			% Start with right cell
+			ccmR = NoCellCycle();
+			ccmR.colour = stromalCellType;
+
+			stromaR = CellFree(ccmR, nodesR, edgesR, obj.GetNextCellId());
+
+			% Critical to stop the ChasteNagaiHondaForce beign applied to the stroma
+			stromaR.cellType = stromalCellType;
+
+			% Make a maltab polygon to exploit the area and perimeter calculation
+			stromaR.grownCellTargetArea = polyarea(posR(:,1), posR(:,2));
+
+			perim = 0;
+			for i = 1:length(edgesR)
+				perim = perim + edgesR(i).GetLength();
+			end
+
+			stromaR.cellData('targetPerimeter') = TargetPerimeterStroma(perim);
+
+
+			% Now for left cell
+			ccmL = NoCellCycle();
+			ccmL.colour = stromalCellType;
+
+			stromaL = CellFree(ccmL, nodesL, edgesL, obj.GetNextCellId());
+
+			% Critical to stop the ChasteNagaiHondaForce beign applied to the stroma
+			stromaL.cellType = stromalCellType;
+
+			% Make a maltab polygon to exploit the area and perimeter calculation
+			stromaL.grownCellTargetArea = polyarea(posL(:,1), posL(:,2));
+
+			perim = 0;
+			for i = 1:length(edgesL)
+				perim = perim + edgesL(i).GetLength();
+			end
+
+			stromaL.cellData('targetPerimeter') = TargetPerimeterStroma(perim);
+
+			stroma = [stromaR, stromaL];
+
+			fixedNodes = [nodeList(1), nodeList(end-3:end)];
 
 		end
 
