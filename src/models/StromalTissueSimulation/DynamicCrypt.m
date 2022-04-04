@@ -380,8 +380,10 @@ classdef DynamicCrypt < LineSimulation
 
 		end
 
+
 		function [cells, nodeList, edgeList, fixedNodes] = BuildMultiStroma(obj, halfWidth, nicheRadius, nicheHeight, cryptSideLength, stromalCellType)
 
+			% DOESN'T APPEAR TO WORK
 			% Produces a stroma with crypt shape for the crypt cells
 			% contining three distinct, but joined stromal cells
 			% Total width is 2 x halfWidth
@@ -576,6 +578,7 @@ classdef DynamicCrypt < LineSimulation
 
 		function [stroma, nodeList, edgeList, fixedNodes] = BuildSplitStroma(obj, halfWidth, nicheRadius, nicheHeight, cryptSideLength, stromalCellType)
 
+			% DOESN'T APPEAR TO WORK
 			% Produces a stroma with crypt shape for the crypt cells
 			% Total width is 2 x halfWidth
 			% Total height is nicheHeight + cryptSideLength + nicheRadius + corner radius (re)
