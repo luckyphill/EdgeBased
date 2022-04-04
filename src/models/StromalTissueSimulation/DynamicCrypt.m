@@ -391,6 +391,11 @@ classdef DynamicCrypt < LineSimulation
 			% Returns the stromal cells, and a vector of nodes that mark the corners, so they
 			% can be pinned in place
 
+			% A multiplier to modify the target area of the stromal cells
+			% with the intention of stopping the joined edge between
+			% the two cells from shrinking to nothing
+			areaMultiplier = 1.1;
+			perimMultiplier = 1.1;
 			%---------------------------------------------------
 			% Make the nodes for the stroma
 			%---------------------------------------------------
@@ -503,14 +508,14 @@ classdef DynamicCrypt < LineSimulation
 			stromaL.cellType = stromalCellType;
 
 			% Make a maltab polygon to exploit the area and perimeter calculation
-			stromaL.grownCellTargetArea = polyarea(posListL(:,1), posListL(:,2));
+			stromaL.grownCellTargetArea = areaMultiplier * polyarea(posListL(:,1), posListL(:,2));
 
 			perim = 0;
 			for i = 1:length(edgeListL)
 				perim = perim + edgeListL(i).GetLength();
 			end
 
-			stromaL.cellData('targetPerimeter') = TargetPerimeterStroma(perim);
+			stromaL.cellData('targetPerimeter') = TargetPerimeterStroma(perimMultiplier * perim);
 
 			%---------------------------------------------------
 			% Make the Right stroma
@@ -521,18 +526,18 @@ classdef DynamicCrypt < LineSimulation
 
 			stromaR = CellFree(ccmR, nodeListR, edgeListR, obj.GetNextCellId());
 
-			% Critical to stop the ChasteNagaiHondaForce beign applied to the stroma
+			% Critical to stop the ChasteNagaiHondaForce being applied to the stroma
 			stromaR.cellType = stromalCellType;
 
 			% Make a maltab polygon to exploit the area and perimeter calculation
-			stromaR.grownCellTargetArea = polyarea(posListR(:,1), posListR(:,2));
+			stromaR.grownCellTargetArea = areaMultiplier * polyarea(posListR(:,1), posListR(:,2));
 
 			perim = 0;
 			for i = 1:length(edgeListR)
 				perim = perim + edgeListR(i).GetLength();
 			end
 
-			stromaR.cellData('targetPerimeter') = TargetPerimeterStroma(perim);
+			stromaR.cellData('targetPerimeter') = TargetPerimeterStroma(perimMultiplier * perim);
 
 
 			%---------------------------------------------------
