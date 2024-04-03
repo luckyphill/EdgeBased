@@ -1,9 +1,13 @@
+Release 1.0.1 accompanys the paper "A rigid body framework for multi-cellular modelling" by Brown et al. which can be found in preprint at https://doi.org/10.1101/2021.02.10.430170 and published in Nature Computational Science at https://doi.org/10.1038/s43588-021-00154-4.
+
+Release 1.0.2 accompanies the paper "Understanding the mechanisms causing buckling of epithelial monolayers" which can be found in preprint at https://doi.org/10.1101/2024.04.01.587527.
+
 ********************************************************
 How to use the edge-based approach MATLAB software tool
 ********************************************************
 
-This is to accompany the paper "A rigid body framework for multi-cellular modelling" by Brown et al. which can be found in preprint at https://doi.org/10.1101/2021.02.10.430170
-If you use this code for any purpose, academic, commercial or otherwise, please cite or link to this preprint (currently hosted on bioRxiv), or the peer-reviewed article when it has been published (a link will be added at that point), in addition to the most recent of any subsequent preprints or published articles related to your use of the code.
+This is to accompany the papers "A rigid body framework for multi-cellular modelling" and "Understanding the mechanisms causing buckling of epithelial monolayers" by Brown et al. 
+If you use this code for any purpose, academic, commercial or otherwise, please cite or link to these papers. 
 
 If you have downloaded this from GitHub, then you should find a directory called "EdgeBased/". This will be the main working directory. All of the components needed to run the simulations presented in Brown et al. can be found in the subdirectory "src/", and the files that were used to produce the analysis shown in the paper can be found in "analysis/". After successfully running simulations, the additional subdirectory "SimulationOutput/" will be found, and if the Visualiser has been used to output images, these will be found in "Images/". If an analysis has been run, then any images will also be found in "Images/", and if so chosen the formatted data can be found int "AnalysisOutput/".
 
